@@ -8,7 +8,7 @@
 (in-package :advent/src/day-1)
 
 (defun get-numlist ()
-  (let* ((input-file-contents (alx:read-file-into-string "../inputs/1.txt"))
+  (let* ((input-file-contents (alx:read-file-into-string "inputs/1.txt"))
          (numstr-list (split-sequence:split-sequence #\newline input-file-contents)))
     (iter (for numstr in numstr-list)
       (until (zerop (length numstr)))
