@@ -41,7 +41,6 @@
 (defun entry-alist-valid? (entry-alist)
   (and (entry-alist-valid-ish? entry-alist)
        (loop for (field . valstr) in entry-alist
-             ;; do (format t "Entry ~a~%" entry-alist)
              always
              (macrolet ((test-fields (&body clauses)
                           (append
@@ -59,12 +58,12 @@
                 ("eyr" (<= 2020 (parse-integer valstr) 2030))
                 ("hgt" (ppcre:register-groups-bind
                            ((#'parse-integer num) unit)
-                           ("([0-9]*)([a-z]{2})" valstr)
+                           ("([0-9]*)(cm|in)" valstr)
                          (alx:eswitch (unit :test #'equalp)
                            ("cm" (<= 150 num 193))
                            ("in" (<= 59 num 76)))))
-                ("hcl" (ppcre:scan "#[0-9a-f]{6}" valstr))
-                ("ecl" (member valstr '("amb" "blu" "brn" "gry" "grn" "hzl" "oth") :test #'equalp))
+                ("hcl" (ppcre:scan "#([0-9a-f]{6})" valstr))
+                ("ecl" (ppcre:scan "amb|blu|brn|gry|grn|hzl|oth" valstr))
                 ("pid" (ppcre:scan "[0-9]{9}" valstr))
                 ("cid" t))))))
 
