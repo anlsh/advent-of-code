@@ -8,13 +8,6 @@
 (in-package :advent/src/day-4)
 
 (defun get-entries ()
-  ;; (-<>
-  ;;     (uiop:read-file-lines "../inputs/4.txt")
-  ;;   (split-sequence:split-sequence "" <> :test #'equalp)
-  ;;   (mapcar (lambda (x) (str:join " " x)) <>)
-  ;;   (mapcar (lambda (x) (str:split " " x))<>)
-  ;;   (-<> <>
-  ;;     (str:split ":" <>)))
   (let* ((entry-strings
            (split-sequence:split-sequence "" (uiop:read-file-lines "../inputs/4.txt")
                                           :test #'equalp))
