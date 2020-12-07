@@ -1,10 +1,9 @@
-
 (uiop:define-package :advent/src/day-5
   (:use #:cl #:arrow-macros)
   (:local-nicknames (#:alx #:alexandria))
   (:export
-   #:solve-4a
-   #:solve-4b))
+   #:solve-5a
+   #:solve-5b))
 
 (in-package :advent/src/day-5)
 
@@ -29,6 +28,6 @@
   (apply #' max (get-seat-ids)))
 
 (defun day-5b ()
-  (loop for id in (sort (get-seat-ids) #'<=)
+  (loop for (curr next) on (sort (get-seat-ids) #'<=)
         when (= next (+ curr 2))
           do (return (+ curr 1))))
