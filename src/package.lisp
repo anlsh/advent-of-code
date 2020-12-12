@@ -6,4 +6,10 @@
    :advent/src/day-3
    :advent/src/day-4
    :advent/src/day-5
-   :advent/src/day-6))
+   :advent/src/day-6
+   :advent/src/day-7
+   :advent/src/day-8
+   :advent/src/day-9
+   :advent/src/day-10
+   :advent/src/day-11
+   :advent/src/day-12))
