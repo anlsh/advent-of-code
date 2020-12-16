@@ -15,4 +15,5 @@
    :advent/src/day-12
    :advent/src/day-13
    :advent/src/day-14
-   :advent/src/day-15))
+   :advent/src/day-15
+   :advent/src/day-16))
