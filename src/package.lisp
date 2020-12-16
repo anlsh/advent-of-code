@@ -12,4 +12,7 @@
    :advent/src/day-9
    :advent/src/day-10
    :advent/src/day-11
-   :advent/src/day-12))
+   :advent/src/day-12
+   :advent/src/day-13
+   :advent/src/day-14
+   :advent/src/day-15))

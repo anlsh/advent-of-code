@@ -1,38 +1,36 @@
 
 (uiop:define-package :advent/src/day-15
-  (:use #:cl #:iterate)
-  (:local-nicknames (#:alx #:alexandria))
+  (:use #:cl)
+  (:local-nicknames)
   (:export
    #:day-15a
    #:day-15b))
 
 (in-package :advent/src/day-15)
 
-(defun get-inputs (final-turn)
-  (let ((num-to-info-map (make-hash-table))
-        last-starting-num
-        curr-turn)
-    (loop for num in (mapcar #'parse-integer (str:split "," "9,12,1,4,17,0,18"))
-          for i from 1
-          do (setf last-starting-num num)
-             (setf (gethash num num-to-info-map) (cons i nil))
-          finally (setf curr-turn (1+ i)))
-    (loop while (< curr-turn final-turn)
-          for curr-turn from curr-turn
-          for prev-num = last-starting-num then curr-num
-          for curr-num = (let* ((prev-indices (gethash prev-num num-to-info-map))
-                                (t0 (cdr prev-indices)))
-                            (if t0 (- (car prev-indices) t0) 0))
-          for indices = (gethash curr-num num-to-info-map)
-          do (if (null indices)
-                 (setf (gethash curr-num num-to-info-map) (cons curr-turn nil))
-                 (progn
-                   (setf (cdr indices) (car indices))
-                   (setf (car indices) curr-turn)))
-          finally (return curr-num))))
+(defun num-on-turn (final-turn)
+  (loop with starting-nums = (apply #'vector (mapcar #'parse-integer
+                                                     (str:split "," "9,12,1,4,17,0,18")))
+        with num-to-index = (make-array (+ (reduce #'max starting-nums) final-turn)
+                                        :element-type 'fixnum :initial-element -1)
+          initially
+             (loop for num across starting-nums
+                   for i from 0
+                   when (> i 0)
+                     do (setf (aref num-to-index (aref starting-nums (1- i))) i))
+        for curr-turn from (1+ (length starting-nums)) upto final-turn
+        for prev-num
+          = (aref starting-nums (1- (length starting-nums)))
+            then curr-num
+        for curr-num = (if (minusp (aref num-to-index prev-num))
+                           0
+                           (- (1- curr-turn) (aref num-to-index prev-num)))
+        do (setf (aref num-to-index prev-num) (1- curr-turn))
+        finally
+           (return curr-num)))
 
 (defun day-15a ()
-  (get-inputs 2020))
+  (num-on-turn 2020))
 
 (defun day-15b ()
-  (get-inputs 30000000))
+  (num-on-turn 30000000))
