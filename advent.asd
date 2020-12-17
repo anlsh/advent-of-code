@@ -7,5 +7,6 @@
   :class :package-inferred-system
   :defsystem-depends-on (:asdf-package-system)
   :depends-on (:uiop :alexandria :split-sequence
+                     :picl
                      :iterate :cl-ppcre :str :fset
                :arrow-macros :advent/package))
