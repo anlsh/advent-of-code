@@ -56,8 +56,8 @@
               (lambda (pos) (fset:image (lambda (off) (map 'vector #'+ pos off)) nbor-offsets))
               steps)))
 
-(defun day-6a ()
+(defun day-17a ()
    (simulate-in-n-dims 3 6))
 
-(defun day-6b ()
+(defun day-17b ()
    (simulate-in-n-dims 4 6))
