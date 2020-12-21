@@ -19,4 +19,5 @@
    :advent/src/day-17
    :advent/src/day-18
    :advent/src/day-19
-   :advent/src/day-20))
+   :advent/src/day-20
+   :advent/src/day-21))
