@@ -13,7 +13,10 @@
                                       *perms*)
                               (mapcar (lambda (p) (list 1 p))
                                        *counter-perms*)))
-(defparameter *bigsize* 12)
+(defparameter *bigsize* nil)
+
+(defun to-list (x)
+  (coerce x 'list))
 
 (defun get-edges (arr)
   (labels ((getv (row col)
@@ -34,16 +37,25 @@
     (-<> (uiop:read-file-lines "../inputs/20.txt")
       (split-sequence:split-sequence "" <> :test #'equalp)
       (mapcar (lambda (spec)
-                (destructuring-bind (id-str . rest) spec
+                (destructuring-bind (id-str . tile) spec
                   (ppcre:register-groups-bind
                       ((#'parse-integer id)) ("Tile (.*):" id-str)
                     (setf (fset:@ map id)
-                          (funcall block-proc-fn rest)))))
+                          (funcall block-proc-fn tile)))))
               <>))
+    (setf *bigsize* (round (sqrt (fset:size map))))
     map))
 
 (defun find-valid-config (edge-info-map)
+  ;; Classic backtracking approach to find a valid placement of the tiles
   (labels ((o+ (n) (mod (1+ n) 2))
+           (align? (edge-code new-idpopt other-idpopt)
+             (destructuring-bind (nid (nflip nperm)) new-idpopt
+               (destructuring-bind (oid(oflip operm)) other-idpopt
+                 (= (-<> edge-code
+                      (aref nperm <>) (aref (fset:@ edge-info-map nid) <>) (aref <> nflip))
+                    (-<> (mod (+ 2 edge-code) 4)
+                      (aref operm <>) (aref (fset:@ edge-info-map oid) <>) (aref <> (o+ oflip)))))))
            (place-tile (row col remaining-tile-ids pos-tile-map)
              (when (zerop (fset:size remaining-tile-ids))
                (return-from find-valid-config pos-tile-map))
@@ -52,40 +64,26 @@
              (fset:do-set (id remaining-tile-ids)
                (loop
                  for popt in *popts*
-                 for (flip perm) = popt
                  when (and (or (zerop col)
-                               (= (-<> 3 (aref perm <>) (aref (fset:@ edge-info-map id) <>)
-                                    (aref <> flip))
-                                  (destructuring-bind
-                                      (id (flip perm)) (fset:@ pos-tile-map (cons row (1- col)))
-                                    (-<> 1 (aref perm <>) (aref (fset:@ edge-info-map id) <>)
-                                      (aref <> (o+ flip))))))
+                               (align? 3 (list id popt) (fset:@ pos-tile-map (list row (1- col)))))
                            (or (zerop row)
-                               (= (-<> 0 (aref perm <>) (aref (fset:@ edge-info-map id) <>)
-                                    (aref <> flip))
-                                  (destructuring-bind
-                                      (id (flip perm)) (fset:@ pos-tile-map (cons (1- row) col))
-                                    (-<> 2 (aref perm <>) (aref (fset:@ edge-info-map id) <>)
-                                      (aref <> (o+ flip)))))))
+                               (align? 0 (list id popt) (fset:@ pos-tile-map (list (1- row) col)))))
                    do (place-tile row (1+ col)
                                   (fset:less remaining-tile-ids id)
-                                  (fset:with pos-tile-map (cons row col) (list id popt)))))))
+                                  (fset:with pos-tile-map (list row col) (list id popt)))))))
     (place-tile 0 0 (fset:domain edge-info-map) (fset:empty-map))))
 
 (defun day-20a ()
-  (let* ((map-edges (get-inputs (lambda (rest) (get-edges (make-array '(10 10)
-                                                                      :initial-contents rest)))))
+  (let* ((map-edges (get-inputs (lambda (rest)
+                                  (get-edges (make-array '(10 10) :initial-contents rest)))))
          (solution (find-valid-config map-edges)))
     (values solution
-            (-<> (list (cons 0 0) (cons 0 (1- *bigsize*)) (cons (1- *bigsize*) 0)
-                       (cons (1- *bigsize*) (1- *bigsize*)))
+            (-<> (list (list 0 0) (list 0 (1- *bigsize*)) (list (1- *bigsize*) 0)
+                       (list (1- *bigsize*) (1- *bigsize*)))
               (mapcar (lambda (x) (fset:@ solution x)) <>)
               (mapcar #'car <>)
               (reduce #'* <>)))))
 
-;; It's WRONG!!!
-;; (funcall (get-coord-tform (list 1 #(0 3 2 1)) '(10 10)) '(2 0))
-;; => '(2 0) but it SHOULD be  (2 9)
 (defun get-coord-tform (popt edgelen)
   (labels ((rot-cwise (n-times pos)
               (loop for _ below n-times
@@ -100,72 +98,59 @@
              (lambda (pos) (rot-cwise tpos (reverse pos))))))))
 
 (defun splice-map ()
-  (iterate
-    (with solution = (day-20a))
-    (with block-map
-          = (get-inputs (lambda (x)
-                          (make-array '(8 8)
-                                      :initial-contents (mapcar (lambda (x) (subseq x 1 (1- (length x))))
-                                                                (subseq x 1 (1- (length x))))))))
-    (with big-map-size = (* *bigsize* 8))
-    (with big-map = (make-array (list big-map-size big-map-size)))
-    (for root in-it (picl:nfold-product 2 (picl:range *bigsize*)))
-    (for rootx = (aref root 0))
-    (for rooty = (aref root 1))
-    (for (id popt) = (fset:@ solution (cons rootx rooty)))
+  (labels ((trim (x) "Shave off the ends of a sequence" (subseq x 1 (1- (length x)))))
     (iterate
-      (with tform = (get-coord-tform popt 8))
-      (with blk = (fset:@ block-map id))
-      (for coord in-it (picl:nfold-product 2 (picl:range 8)))
-      (let ((tcoord (funcall tform (coerce coord 'list))))
-        (setf (aref big-map
-                    (+ (* 8 rootx) (elt tcoord 0))
-                    (+ (* 8 rooty) (elt tcoord 1)))
-              (aref blk (elt coord 0) (elt coord 1)))))
-    (finally (return big-map))))
+      (with solution = (day-20a))
+      (with block-map
+            = (get-inputs (lambda (x)
+                            (make-array '(8 8)
+                                        :initial-contents (mapcar #'trim (trim x))))))
+      (with big-map-size = (* *bigsize* 8))
+      (with big-map = (make-array (list big-map-size big-map-size)))
+      (for (rootx rooty) in-it (picl:map #'to-list (picl:nfold-product 2 (picl:range *bigsize*))))
+      (for (id popt) = (fset:@ solution (list rootx rooty)))
+      (iterate
+        (with tform = (get-coord-tform popt 8))
+        (with blk = (fset:@ block-map id))
+        (for coord in-it (picl:map #'to-list (picl:nfold-product 2 (picl:range 8))))
+        (let ((tcoord (funcall tform coord)))
+          (setf (aref big-map
+                      (+ (* 8 rootx) (elt tcoord 0))
+                      (+ (* 8 rooty) (elt tcoord 1)))
+                (aref blk (elt coord 0) (elt coord 1)))))
+      (finally (return big-map)))))
 
-(defvar *snake-lines*
-  (list "                  # "
-        "#    ##    ##    ###"
-        " #  #  #  #  #  #   "))
-(defvar *snake-nrows* (length *snake-lines*))
-(defvar *snake-ncols* (length (elt *snake-lines* 0)))
+(defvar *snake*
+  #2A("                  # "
+      "#    ##    ##    ###"
+      " #  #  #  #  #  #   "))
+(destructuring-bind (rows cols) (array-dimensions *snake*)
+  (defvar *snake-nrows* rows)
+  (defvar *snake-ncols* cols))
 (defparameter *snake-parts*
-  (iterate (for loc in-it (picl:product (picl:range *snake-nrows*)
-                                        (picl:range *snake-ncols*)))
-    (for locx = (aref loc 0))
-    (for locy = (aref loc 1))
-    (when (equalp #\# (elt (elt *snake-lines* locx) locy))
+  (iterate (for (locx locy)
+                in-it (picl:map #'to-list (picl:product (picl:range (array-dimension *snake* 0))
+                                                        (picl:range (array-dimension *snake* 1)))))
+    (when (equalp #\# (aref *snake* locx locy))
       (collect (list locx locy)))))
 
 (defun day-20b ()
   (let ((map (splice-map)))
     (destructuring-bind (nrows ncols) (array-dimensions map)
-      (iterate (for pos in-it (picl:product (picl:range nrows)
-                                            (picl:range ncols)))
+      (iterate (for pos in-it (picl:map #'to-list
+                                        (picl:product (picl:range nrows) (picl:range ncols))))
         (loop for popt in *popts*
               for tform = (get-coord-tform popt 1)
               for spos-ls = (-<> *snake-parts*
                               (mapcar (lambda (x) (funcall tform x)) <>)
-                              (mapcar
-                               (lambda (x) (list (+ (elt pos 0) (elt x 0))
-                                                 (+ (elt pos 1) (elt x 1))))
-                               <>))
+                              (mapcar (lambda (x) (mapcar #'+ pos x)) <>))
               for spos-bounded
-                = (every (lambda (p)
-                           (destructuring-bind (row col) p
-                             (and (< -1 row nrows)
-                                  (< -1 col ncols))))
+                = (every (lambda (p) (every #'< '(-1 -1) p (list nrows ncols)))
                          spos-ls)
               when (and spos-bounded
-                        (every (lambda (p)
-                                 (not (equalp #\. (apply #'aref map p))))
+                        (notany (lambda (p) (equalp #\. (apply #'aref map p)))
                                spos-ls))
-                do (progn (print "found a monster!")
-                          (mapcar (lambda (p)
-                                    (destructuring-bind (row col) p
-                                      (setf (aref map row col) #\O)))
-                                  spos-ls))))
-      (iterate (for pos in-it (picl:product (picl:range nrows)
-                                            (picl:range ncols)))
-        (counting (equalp #\# (picl:apply #'aref map pos)))))))
+                do (mapcar (lambda (p) (setf (apply #'aref map p) #\O))
+                            spos-ls)))
+      (iterate (for pos below (expt (* 8 *bigsize*) 2))
+        (counting (equalp #\# (row-major-aref map pos)))))))

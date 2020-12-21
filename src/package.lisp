@@ -1,5 +1,4 @@
 (uiop:define-package :advent/src/package
-  (:use #:cl)
   (:use-reexport
    :advent/src/day-1
    :advent/src/day-2
@@ -16,4 +15,8 @@
    :advent/src/day-13
    :advent/src/day-14
    :advent/src/day-15
-   :advent/src/day-16))
+   :advent/src/day-16
+   :advent/src/day-17
+   :advent/src/day-18
+   :advent/src/day-19
+   :advent/src/day-20))
