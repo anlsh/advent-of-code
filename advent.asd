@@ -14,7 +14,7 @@
                :fset
                :iterate
                :picl
-               :queues
+               :picl/iterate
                :split-sequence
                :str
                :uiop))
