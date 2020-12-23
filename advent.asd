@@ -6,8 +6,7 @@
   :license  "MIT"
   :class :package-inferred-system
   :defsystem-depends-on (:asdf-package-system)
-  :depends-on (:advent/package
-               :alexandria
+  :depends-on (:alexandria
                :arrow-macros
                :bit-smasher
                :cl-ppcre
@@ -17,4 +16,6 @@
                :picl/iterate
                :split-sequence
                :str
-               :uiop))
+               :uiop
+
+               :advent/package))
