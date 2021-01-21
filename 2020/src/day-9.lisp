@@ -1,11 +1,11 @@
-(uiop:define-package :advent/src/day-9
+(uiop:define-package :advent/2020/src/day-9
   (:use #:cl)
   (:local-nicknames (#:alx #:alexandria))
   (:export
    #:day-9a
    #:day-9b))
 
-(in-package :advent/src/day-9)
+(in-package :advent/2020/src/day-9)
 
 (defun get-nums ()
   (apply #'vector (mapcar #'parse-integer (uiop:read-file-lines "../inputs/9.txt"))))

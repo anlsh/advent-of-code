@@ -1,11 +1,11 @@
-(uiop:define-package :advent/src/day-4
+(uiop:define-package :advent/2020/src/day-4
   (:use #:cl #:iterate #:arrow-macros)
   (:local-nicknames (#:alx #:alexandria) (#:split #:split-sequence))
   (:export
    #:solve-4a
    #:solve-4b))
 
-(in-package :advent/src/day-4)
+(in-package :advent/2020/src/day-4)
 
 (defun get-entries ()
   (let* ((entry-strings

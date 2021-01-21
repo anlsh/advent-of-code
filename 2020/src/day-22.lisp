@@ -1,11 +1,11 @@
 
-(uiop:define-package :advent/src/day-22
+(uiop:define-package :advent/2020/src/day-22
   (:use #:cl)
   (:export
    #:day-22a
    #:day-22b))
 
-(in-package :advent/src/day-22)
+(in-package :advent/2020/src/day-22)
 
 (defun get-decks (file)
   (loop for pspec in (split-sequence:split-sequence "" (uiop:read-file-lines file)

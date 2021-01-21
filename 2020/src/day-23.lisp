@@ -1,11 +1,11 @@
 
-(uiop:define-package :advent/src/day-23
+(uiop:define-package :advent/2020/src/day-23
   (:use #:cl #:arrow-macros #:iterate)
   (:export
    #:day-23a
    #:day-23b))
 
-(in-package :advent/src/day-23)
+(in-package :advent/2020/src/day-23)
 
 (defparameter *input* "135468729")
 

@@ -1,10 +1,10 @@
-(uiop:define-package :advent/src/day-3
+(uiop:define-package :advent/2020/src/day-3
   (:use #:cl #:iterate)
   (:export
    #:solve-3a
    #:solve-3b))
 
-(in-package :advent/src/day-3)
+(in-package :advent/2020/src/day-3)
 
 (defun get-map ()
   (iter (for line in-file "inputs/3.txt" using #'read-line)

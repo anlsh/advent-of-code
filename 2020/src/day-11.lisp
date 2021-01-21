@@ -1,11 +1,11 @@
-(uiop:define-package :advent/src/day-11
+(uiop:define-package :advent/2020/src/day-11
   (:use #:cl)
   (:local-nicknames (#:alx #:alexandria))
   (:export
    #:day-11a
    #:day-11b))
 
-(in-package :advent/src/day-11)
+(in-package :advent/2020/src/day-11)
 
 (defun get-inputs ()
   (let* ((lines (uiop:read-file-lines "../inputs/11.txt"))

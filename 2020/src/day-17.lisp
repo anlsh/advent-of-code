@@ -1,12 +1,12 @@
 
-(uiop:define-package :advent/src/day-17
+(uiop:define-package :advent/2020/src/day-17
   (:use #:cl #:arrow-macros)
   (:local-nicknames)
   (:export
    #:day-17a
    #:day-17b))
 
-(in-package :advent/src/day-17)
+(in-package :advent/2020/src/day-17)
 
 (defun get-initial-set (pos-fn)
   (loop with cubes = (fset:empty-set)

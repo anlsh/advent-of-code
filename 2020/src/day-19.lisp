@@ -1,12 +1,12 @@
 
-(uiop:define-package :advent/src/day-19
+(uiop:define-package :advent/2020/src/day-19
   (:use #:cl #:arrow-macros)
   (:local-nicknames (#:alx #:alexandria))
   (:export
    #:day-19a
    #:day-19b))
 
-(in-package :advent/src/day-19)
+(in-package :advent/2020/src/day-19)
 
 (defun parse-input ()
   (let* ((lines (uiop:read-file-lines "../inputs/19.txt"))

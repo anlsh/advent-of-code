@@ -1,12 +1,12 @@
 
-(uiop:define-package :advent/src/day-13
+(uiop:define-package :advent/2020/src/day-13
   (:use #:cl #:iterate)
   (:local-nicknames (#:alx #:alexandria))
   (:export
    #:day-13a
    #:day-13b))
 
-(in-package :advent/src/day-13)
+(in-package :advent/2020/src/day-13)
 
 (defun wait-time (timestamp interval)
   (mod (* -1 timestamp) interval))

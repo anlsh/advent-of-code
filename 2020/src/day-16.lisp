@@ -1,12 +1,12 @@
 
-(uiop:define-package :advent/src/day-16
+(uiop:define-package :advent/2020/src/day-16
   (:use #:cl #:arrow-macros)
   (:local-nicknames)
   (:export
    #:day-16a
    #:day-16b))
 
-(in-package :advent/src/day-16)
+(in-package :advent/2020/src/day-16)
 
 (defun num-valid-for-rule? (num rule)
   (destructuring-bind (_ i0 i1 t0 t1) rule

@@ -2,14 +2,14 @@
 ;; direction management code here cna be heavily simplified
 ;; See https://www.reddit.com/r/adventofcode/comments/kbj5me/2020_day_12_solutions/gfhsobd/
 
-(uiop:define-package :advent/src/day-12
+(uiop:define-package :advent/2020/src/day-12
   (:use #:cl)
   (:local-nicknames (#:alx #:alexandria))
   (:export
    #:day-12a
    #:day-12b))
 
-(in-package :advent/src/day-12)
+(in-package :advent/2020/src/day-12)
 
 (defun get-inputs ()
   (mapcar (lambda (str)

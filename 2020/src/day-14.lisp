@@ -1,12 +1,12 @@
 
-(uiop:define-package :advent/src/day-14
+(uiop:define-package :advent/2020/src/day-14
   (:use #:cl #:iterate)
   (:local-nicknames (#:alx #:alexandria))
   (:export
    #:day-14a
    #:day-14b))
 
-(in-package :advent/src/day-14)
+(in-package :advent/2020/src/day-14)
 
 (defparameter *word-size* 36)
 

@@ -1,11 +1,11 @@
-(uiop:define-package :advent/src/day-2
+(uiop:define-package :advent/2020/src/day-2
   (:use #:cl #:iterate)
   (:local-nicknames (#:alx #:alexandria))
   (:export
    #:solve-2a
    #:solve-2b))
 
-(in-package :advent/src/day-2)
+(in-package :advent/2020/src/day-2)
 
 (defclass pwd-entry ()
   ((min :initarg :min)

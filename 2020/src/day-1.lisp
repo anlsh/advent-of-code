@@ -1,11 +1,11 @@
-(uiop:define-package :advent/src/day-1
+(uiop:define-package :advent/2020/src/day-1
   (:use #:cl #:iterate)
   (:local-nicknames (#:alx #:alexandria))
   (:export
    #:solve-1a
    #:solve-1b))
 
-(in-package :advent/src/day-1)
+(in-package :advent/2020/src/day-1)
 
 (defun get-numlist ()
   (let* ((input-file-contents (alx:read-file-into-string "inputs/1.txt"))

@@ -1,11 +1,11 @@
 
-(uiop:define-package :advent/src/day-24
+(uiop:define-package :advent/2020/src/day-24
   (:use #:cl #:arrow-macros #:iterate)
   (:export
    #:day-24a
    #:day-24b))
 
-(in-package :advent/src/day-24)
+(in-package :advent/2020/src/day-24)
 
 (defun str-to-dirs (str)
   (-<> str

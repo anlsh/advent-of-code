@@ -1,11 +1,11 @@
-(uiop:define-package :advent/src/day-6
+(uiop:define-package :advent/2020/src/day-6
   (:use #:cl #:iterate #:arrow-macros)
   (:local-nicknames (#:alx #:alexandria) (#:split #:split-sequence))
   (:export
    #:day-6a
    #:day-6b))
 
-(in-package :advent/src/day-6)
+(in-package :advent/2020/src/day-6)
 
 (defun day-6a ()
   (-<> (uiop:read-file-lines "../inputs/6.txt")

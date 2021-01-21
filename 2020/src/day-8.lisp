@@ -1,11 +1,11 @@
-(uiop:define-package :advent/src/day-8
+(uiop:define-package :advent/2020/src/day-8
   (:use #:cl)
   (:local-nicknames (#:alx #:alexandria))
   (:export
    #:day-8a
    #:day-8b))
 
-(in-package :advent/src/day-8)
+(in-package :advent/2020/src/day-8)
 
 (defun get-ops ()
   (apply #'vector (uiop:read-file-lines "../inputs/8.txt")))

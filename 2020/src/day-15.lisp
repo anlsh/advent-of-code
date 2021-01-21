@@ -1,12 +1,12 @@
 
-(uiop:define-package :advent/src/day-15
+(uiop:define-package :advent/2020/src/day-15
   (:use #:cl)
   (:local-nicknames)
   (:export
    #:day-15a
    #:day-15b))
 
-(in-package :advent/src/day-15)
+(in-package :advent/2020/src/day-15)
 
 (defun num-on-turn (final-turn)
   (loop with starting-nums = (apply #'vector (mapcar #'parse-integer

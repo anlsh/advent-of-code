@@ -1,11 +1,11 @@
-(uiop:define-package :advent/src/day-20
+(uiop:define-package :advent/2020/src/day-20
   (:use #:cl #:arrow-macros #:iterate)
   (:local-nicknames (#:alx #:alexandria))
   (:export
    #:day-20a
    #:day-20b))
 
-(in-package :advent/src/day-20)
+(in-package :advent/2020/src/day-20)
 
 (defparameter *perms* (list #(0 1 2 3) #(3 0 1 2) #(2 3 0 1) #(1 2 3 0)))
 (defparameter *counter-perms* (list #(0 3 2 1) #(1 0 3 2) #(2 1 0 3) #(3 2 1 0)))

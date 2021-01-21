@@ -1,10 +1,10 @@
-(uiop:define-package :advent/src/day-7
+(uiop:define-package :advent/2020/src/day-7
   (:use #:cl)
   (:export
    #:day-7a
    #:day-7b))
 
-(in-package :advent/src/day-7)
+(in-package :advent/2020/src/day-7)
 
 (defun get-inputs ()
   (let ((parent-map (fset:empty-map))

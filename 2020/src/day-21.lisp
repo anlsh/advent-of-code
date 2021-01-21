@@ -1,10 +1,10 @@
-(uiop:define-package :advent/src/day-21
+(uiop:define-package :advent/2020/src/day-21
   (:use #:cl #:arrow-macros)
   (:export
    #:day-21a
    #:day-22b))
 
-(in-package :advent/src/day-21)
+(in-package :advent/2020/src/day-21)
 
 (defun get-inputs ()
   (-<> (uiop:read-file-lines "../inputs/21.txt")

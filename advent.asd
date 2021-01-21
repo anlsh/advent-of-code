@@ -18,4 +18,5 @@
                :str
                :uiop
 
-               :advent/package))
+               :advent/2018/package
+               :advent/2020/package))

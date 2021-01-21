@@ -1,10 +1,10 @@
 
-(uiop:define-package :advent/src/day-25
+(uiop:define-package :advent/2020/src/day-25
   (:use #:cl #:arrow-macros #:iterate)
   (:export
    #:day-25))
 
-(in-package :advent/src/day-25)
+(in-package :advent/2020/src/day-25)
 
 (defparameter *subject-num* 7)
 (defparameter *mod-base* 20201227)

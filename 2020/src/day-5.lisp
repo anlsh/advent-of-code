@@ -1,11 +1,11 @@
-(uiop:define-package :advent/src/day-5
+(uiop:define-package :advent/2020/src/day-5
   (:use #:cl #:arrow-macros)
   (:local-nicknames (#:alx #:alexandria))
   (:export
    #:solve-5a
    #:solve-5b))
 
-(in-package :advent/src/day-5)
+(in-package :advent/2020/src/day-5)
 
 (defun id (row col)
   (+ col (* 8 row)))

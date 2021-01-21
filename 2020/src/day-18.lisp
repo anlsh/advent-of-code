@@ -1,12 +1,12 @@
 
-(uiop:define-package :advent/src/day-18
+(uiop:define-package :advent/2020/src/day-18
   (:use #:cl #:arrow-macros)
   (:local-nicknames (#:alx #:alexandria))
   (:export
    #:day-18a
    #:day-18b))
 
-(in-package :advent/src/day-18)
+(in-package :advent/2020/src/day-18)
 
 (defun tokenize-line (line)
   (-<> line
