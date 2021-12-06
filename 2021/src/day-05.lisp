@@ -25,6 +25,8 @@
         for xs = (sort (list x1 x2) #'<=)
         for ys = (sort (list y1 y2) #'<=)
         do (when (or (= x1 x2) (= y1 y2))
+             ;; This actually sets the box defined by two opposite corners, and
+             ;; only works for horizontal/vertical lines LOL
              (loop for x from (car xs) to (cadr xs)
                    do (loop for y from (car ys) to (cadr ys)
                             do (incf (fset:@ point-to-count (list x y))))))
