@@ -15,3 +15,13 @@
 (fset:empty-bag)
 (defparameter *bag* (fset:bag :a :b :x :y :x))
 (fset:multiplicity *bag* :x)
+
+
+
+;; cl-ppcre
+
+;; Can use one function for multiple vars
+(cl-ppcre:register-groups-bind
+    (str (#'parse-integer x y z))
+    ("(.*) (.*) (.*) (.*)" "foo 1 2 3")
+  (list str x y z)) ;; => '("foo" 1 2 3)
