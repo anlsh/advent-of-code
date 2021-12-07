@@ -5,7 +5,7 @@
    #:solve-5a
    #:solve-5b))
 
-(in-package :advent/2021/src/day-04)
+(in-package :advent/2021/src/day-05)
 
 (defparameter *input* (uiop:read-file-lines "../inputs/05.txt"))
 
