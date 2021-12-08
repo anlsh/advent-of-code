@@ -7,4 +7,5 @@
    :advent/2021/src/day-05
    :advent/2021/src/day-06
    :advent/2021/src/day-07
+   :advent/2021/src/day-08
    ))
