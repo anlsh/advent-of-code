@@ -23,7 +23,7 @@
       (error (format nil "~a has size ~a" set (fset:size set)))
       (fset:arb set)))
 
-(defun nums-to-scrambles (scrambles)
+(defun scrambles-to-nums (scrambles)
   (let ((nums-to-scrambles (fset:empty-map))
         (pos-to-scrambled (fset:empty-map)))
     (fset:image (lambda (x) (when (= 2 (fset:size x)) (setf (fset:@ nums-to-scrambles 1) x)))
@@ -76,12 +76,17 @@
     (setf (fset:@ nums-to-scrambles 2)
           (singleton-element (fset:set-difference scrambles
                                                   (fset:range nums-to-scrambles))))
-    (values nums-to-scrambles
-            pos-to-scrambled)))
+    (unless (fset:equal? (fset:range nums-to-scrambles)
+                         scrambles)
+      (error "Ok, something has gone really wrong :/"))
+    (fset:image (lambda (k v) (values v k))
+                nums-to-scrambles)))
 
-(defun get-fake-to-real-mapping (scrambled-lines)
-  (loop for (scrambles outs) in scrambled-lines
-        do (print (multiple-value-list (nums-to-scrambles scrambles)))))
+(defun solve-7b ()
+  (loop for (scrambles outs) in *input*
+        for scrambles-to-nums = (scrambles-to-nums scrambles)
+        summing (parse-integer (str:join "" (mapcar #'write-to-string (mapcar (lambda (x) (fset:@ scrambles-to-nums x))
+                                                                              outs))))))
 
 ;; (defun solve-8b ()
 ;;   (loop for scrambled-line in *input*
