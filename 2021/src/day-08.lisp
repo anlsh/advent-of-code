@@ -11,7 +11,7 @@
   (fset:convert 'fset:set string))
 
 (defparameter *input*
-  (-<> (uiop:read-file-lines "../inputs/08.example")
+  (-<> (uiop:read-file-lines "../inputs/08.txt")
     (mapcar (lambda (line)
               (let ((splits (str:split " | " line)))
                 (list (fset:convert 'fset:set (mapcar #'string-to-set (str:split " " (car splits))))
@@ -93,12 +93,3 @@
         for scrambles-to-nums = (scrambles-to-nums scrambles)
         summing (parse-integer (str:join "" (mapcar #'write-to-string (mapcar (lambda (x) (fset:@ scrambles-to-nums x))
                                                                               outs))))))
-
-;; (defun solve-8b ()
-;;   (loop for scrambled-line in *input*
-;;         for fake-to-real = (get-fake-to-real-mapping (car scrambled-line))
-;;         do
-;;            (print fake-to-real)
-;;         collect (mapcar (lambda (str) (fset:@ *set-to-string* (fset:image (lambda (x) (fset:@ fake-to-real x))
-;;                                                                           (string-to-set str))))
-;;                         (cadr scrambled-line))))
