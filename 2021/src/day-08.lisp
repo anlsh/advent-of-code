@@ -73,7 +73,7 @@
                                                    :initial-value (fset:empty-set))))
                    scrambled-set))
      scrambled-lines)
-    mapping))
+    (get-representatives mapping)))
 
 (defun solve-8b ()
   (loop for scrambled-line in *input*
