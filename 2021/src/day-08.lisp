@@ -82,6 +82,12 @@
     (fset:image (lambda (k v) (values v k))
                 nums-to-scrambles)))
 
+(defun solve-7a ()
+  (loop for (scrambles outs) in *input*
+        summing (loop for out in outs
+                      counting (fset:contains? (fset:set 2 4 3 7)
+                                               (fset:size out)))))
+
 (defun solve-7b ()
   (loop for (scrambles outs) in *input*
         for scrambles-to-nums = (scrambles-to-nums scrambles)
