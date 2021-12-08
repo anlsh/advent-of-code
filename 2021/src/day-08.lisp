@@ -32,6 +32,10 @@
    (8 (string-to-set "abcdefg"))
    (9 (string-to-set "abcdfg"))))
 
+(defparameter *set-to-string*
+  (fset:image (lambda (k v) (values v k))
+              *num-to-codes*))
+
 (defparameter *strlen-to-nums*
   (let ((map (fset:empty-map (fset:empty-set))))
     (fset:image (lambda (key val)
@@ -75,6 +79,11 @@
      scrambled-lines)
     (get-representatives mapping)))
 
-(defun solve-8b ()
-  (loop for scrambled-line in *input*
-        collect (get-fake-to-real-mapping (car scrambled-line))))
+;; (defun solve-8b ()
+;;   (loop for scrambled-line in *input*
+;;         for fake-to-real = (get-fake-to-real-mapping (car scrambled-line))
+;;         do
+;;            (print fake-to-real)
+;;         collect (mapcar (lambda (str) (fset:@ *set-to-string* (fset:image (lambda (x) (fset:@ fake-to-real x))
+;;                                                                           (string-to-set str))))
+;;                         (cadr scrambled-line))))
