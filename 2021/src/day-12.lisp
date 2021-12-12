@@ -12,7 +12,7 @@
 (defparameter *nbors* (fset:empty-map (fset:empty-set)))
 
 (defun build-graph ()
-  (-<> (uiop:read-file-lines "../inputs/12.example")
+  (-<> (uiop:read-file-lines "../inputs/12.txt")
     (mapcar (lambda (str) (ppcre:register-groups-bind (start end) ("(.*)-(.*)" str)
                             (fset:adjoinf (fset:@ *nbors* start) end)
                             (fset:adjoinf (fset:@ *nbors* end) start)))
