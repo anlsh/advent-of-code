@@ -10,4 +10,6 @@
    :advent/2021/src/day-08
    :advent/2021/src/day-09
    :advent/2021/src/day-10
+   :advent/2021/src/day-11
+   :advent/2021/src/day-12
    ))
