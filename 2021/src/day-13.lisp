@@ -39,10 +39,22 @@
                                           (car (cdaadr *input*)))))
 
 (defun solve-13b ()
-  (let ((final-points
-          (loop with point-set = (car *input*)
-                for (fold-left? pivot) in (cadr *input*)
-                do (setf point-set (funcall (if fold-left? #'fold-left #'fold-up)
-                                            point-set pivot))
-                finally
-                   (return point-set))))))
+  (let* ((final-points
+           (loop with point-set = (car *input*)
+                 for (fold-left? pivot) in (cadr *input*)
+                 do (setf point-set (funcall (if fold-left? #'fold-left #'fold-up)
+                                             point-set pivot))
+                 finally
+                    (return point-set)))
+         (width (1+ (fset:reduce #'max (fset:image (lambda (pos) (cadr pos)) final-points))))
+         (height (1+ (fset:reduce #'max (fset:image (lambda (pos) (car pos)) final-points))))
+         (output-arr (loop with arr = (make-array height)
+                           for r below height
+                           do (setf (aref arr r) (make-array width :initial-element "."))
+                           finally (return arr))))
+    (fset:image (lambda (pos) (setf (aref (aref output-arr (car pos)) (cadr pos))
+                                    "#"))
+                final-points)
+    (loop for r across output-arr
+          do (print (str:join "" (loop for c across r collecting c))))
+    ))
