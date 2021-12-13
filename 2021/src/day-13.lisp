@@ -43,13 +43,13 @@
         do (print (str:join "" (loop for c across r collecting c)))))
 
 (defun pointset-to-vvec (point-set)
-  (let* ((width (1+ (fset:reduce #'max (fset:image (lambda (pos) (cadr pos)) point-set))))
-         (height (1+ (fset:reduce #'max (fset:image (lambda (pos) (car pos)) point-set))))
+  (let* ((width (1+ (fset:reduce #'max (fset:image (lambda (pos) (car pos)) point-set))))
+         (height (1+ (fset:reduce #'max (fset:image (lambda (pos) (cadr pos)) point-set))))
          (output-arr (loop with arr = (make-array height)
                            for r below height
                            do (setf (aref arr r) (make-array width :initial-element "."))
                            finally (return arr))))
-    (fset:image (lambda (pos) (setf (aref (aref output-arr (car pos)) (cadr pos))
+    (fset:image (lambda (pos) (setf (aref (aref output-arr (cadr pos)) (car pos))
                                     "#"))
                 point-set)
     output-arr))
