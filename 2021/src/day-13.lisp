@@ -38,6 +38,22 @@
 (defun solve-13a () (fset:size (fold-left (car *input*)
                                           (car (cdaadr *input*)))))
 
+(defun print-vector-of-vectors (vec-of-vecs)
+  (loop for r across vec-of-vecs
+        do (print (str:join "" (loop for c across r collecting c)))))
+
+(defun pointset-to-vvec (point-set)
+  (let* ((width (1+ (fset:reduce #'max (fset:image (lambda (pos) (cadr pos)) point-set))))
+         (height (1+ (fset:reduce #'max (fset:image (lambda (pos) (car pos)) point-set))))
+         (output-arr (loop with arr = (make-array height)
+                           for r below height
+                           do (setf (aref arr r) (make-array width :initial-element "."))
+                           finally (return arr))))
+    (fset:image (lambda (pos) (setf (aref (aref output-arr (car pos)) (cadr pos))
+                                    "#"))
+                point-set)
+    output-arr))
+
 (defun solve-13b ()
   (let* ((final-points
            (loop with point-set = (car *input*)
@@ -45,16 +61,5 @@
                  do (setf point-set (funcall (if fold-left? #'fold-left #'fold-up)
                                              point-set pivot))
                  finally
-                    (return point-set)))
-         (width (1+ (fset:reduce #'max (fset:image (lambda (pos) (cadr pos)) final-points))))
-         (height (1+ (fset:reduce #'max (fset:image (lambda (pos) (car pos)) final-points))))
-         (output-arr (loop with arr = (make-array height)
-                           for r below height
-                           do (setf (aref arr r) (make-array width :initial-element "."))
-                           finally (return arr))))
-    (fset:image (lambda (pos) (setf (aref (aref output-arr (car pos)) (cadr pos))
-                                    "#"))
-                final-points)
-    (loop for r across output-arr
-          do (print (str:join "" (loop for c across r collecting c))))
-    ))
+                    (return point-set))))
+    (print-vector-of-vectors (pointset-to-vvec final-points))))
