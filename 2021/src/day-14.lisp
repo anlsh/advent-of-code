@@ -16,44 +16,47 @@
             (cddr *input*))
     rules))
 
-(defun step-string (str)
-  (loop with new-str = ""
-        for (a b) on (loop for c across str collecting (string c))
-        for key = (concatenate 'string a b)
-        while b
-        do (setf new-str
-                 (concatenate 'string new-str (if (fset:contains? (fset:domain *rules*) key)
-                                                  (concatenate 'string (string a)
-                                                               (fset:@ *rules* key))
-                                                  (string a))))
-        finally (return (concatenate 'string new-str (string a)))))
-
-(defun step-string-for-steps (string num-steps)
+(defun get-letter-counts (str num-steps)
   (let ((memo-map (fset:empty-map)))
-    (labels ((between-chars (s1 s2 num-steps)))
-      (let* ((str-key (concatenate 'string s1 s2))
-             (key (list str-key num-steps)))
-        (unless (fset:contains? memo-map key)
-          (setf (fset:@ memo-map key)
-                (cond ((= num-steps 0) "")
-                      (t (loop with new-str = ""
-                               for (a b) on (loop for c across (concatenate 'string a (between-chars a b (1- num-steps)) b) collecting (string c))
-                               for key = (concatenate 'string a b)
-                               while b
-                               do (setf new-str
-                                        (concatenate 'string new-str (concatenate'string a (fset:@ *rules* key))))
-                               finally (return (subseq 1 new-str))))
-                      )))
-        (fset:@ memo-map key))
-      )))
+    (labels ((letter-counts (c1 c2 num-steps)
+               ;; (format t "~a ~a ~a~%" c1 c2 num-steps)
+               (let* ((strkey (concatenate 'string c1 c2))
+                      (key (list strkey num-steps)))
+                 (when (= num-steps 0)
+                   ;; (format t "Zero steps for ~a~%" key)
+                   (return-from letter-counts (fset:bag c1 c2)))
+                 (when (fset:contains? (fset:domain memo-map) key)
+                   ;; (format t "Hit memo for ~a~%" key)
+                   (return-from letter-counts (fset:@ memo-map key)))
 
-(defun string-diffcounts (str)
-  (let* ((letter-count-map (fset:convert 'fset:map (fset:convert 'fset:bag str))))
+                 (setf (fset:@ memo-map key)
+                       (multiple-value-bind (val present?) (fset:@ *rules* strkey)
+                         ;; (format t "Looked up ~a: ~a, ~a~%" key present? val)
+                         (if present?
+                             (fset:less (fset:bag-sum (letter-counts c1 val (1- num-steps))
+                                                      (letter-counts val c2 (1- num-steps)))
+                                        val)
+                             (fset:convert 'fset:bag key)))))))
+      (loop with count-bag = (fset:empty-bag)
+            for (a b) on (loop for c across str collecting (string c))
+            for i from 0
+            for key = (concatenate 'string a b)
+            while b
+            do (setf count-bag
+                     (fset:bag-sum count-bag (letter-counts a b num-steps)))
+               (when (> i 0) (setf count-bag (fset:less count-bag a)))
+            finally (return count-bag)))))
+
+(defun bag-diffcounts (bag)
+  (let* ((letter-count-map (fset:convert 'fset:map bag)))
     (- (fset:reduce #'max (fset:range letter-count-map))
        (fset:reduce #'min (fset:range letter-count-map)))))
 
+(defun string-diffcounts (str)
+  (bag-diffcounts (fset:convert 'fset:bag str)))
+
 (defun solve-14a ()
-  (string-diffcounts (loop with curr-str = *initstr*
-                           for k below 10
-                           do (setf curr-str (step-string curr-str))
-                           finally (return curr-str))))
+  (bag-diffcounts (get-letter-counts *initstr* 10)))
+
+(defun solve-14b ()
+  (bag-diffcounts (get-letter-counts *initstr* 40)))
