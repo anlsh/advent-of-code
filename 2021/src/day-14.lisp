@@ -48,9 +48,6 @@
     (- (fset:reduce #'max (fset:range letter-count-map))
        (fset:reduce #'min (fset:range letter-count-map)))))
 
-(defun string-diffcounts (str)
-  (bag-diffcounts (fset:convert 'fset:bag str)))
-
 (defun solve-14a ()
   (bag-diffcounts (get-letter-counts *initstr* 10)))
 
