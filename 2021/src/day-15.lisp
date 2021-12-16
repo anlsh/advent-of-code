@@ -21,6 +21,8 @@
           for (pos cost) = (multiple-value-list (pq:pqueue-pop pq))
           do (unless (fset:domain-contains? visited pos)
                (when (equalp pos target)
+                 (print (/ (fset:size visited) (* (1+ (elt target 0))
+                                                  (1+ (elt target 1)))))
                  (return-from helper cost))
                (fset:adjoinf visited pos cost)
                (mapcar (lambda (pos) (pqueue:pqueue-push pos (+ cost (funcall get-val-fn pos))

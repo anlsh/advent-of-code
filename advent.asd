@@ -14,6 +14,7 @@
                :iterate
                :picl
                :picl/iterate
+               :priority-queue
                :split-sequence
                :str
                :uiop
