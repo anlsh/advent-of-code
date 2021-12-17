@@ -25,23 +25,21 @@
                               min-x)
         finally (return n)))
 
-;; target area: x=20..30, y=-10..-5
-(defun step-probe (x y dx dy)
-  (list (+ x dx)
-        (+ y dy)
-        (* (signum dx) (1- (abs dx)))
-        (1- dy)))
-
 (defun velocity-hits-target (dx dy)
-  (loop with probe-state = (list 0 0 dx dy)
-        while t
-        do (setf probe-state (apply #'step-probe probe-state))
-           (destructuring-bind (x y dx dy) probe-state
-             (cond ((and (<= *min-x* x *max-x*)
-                         (<= *min-y* y *max-y*))
-                    (return-from velocity-hits-target t))
-                   ((or (< y *min-y*)
-                        (> x *max-x*)) (return-from velocity-hits-target nil))))))
+  (labels ((step-probe (x y dx dy)
+             (list (+ x dx)
+                   (+ y dy)
+                   (* (signum dx) (1- (abs dx)))
+                   (1- dy))))
+    (loop with probe-state = (list 0 0 dx dy)
+          while t
+          do (setf probe-state (apply #'step-probe probe-state))
+             (destructuring-bind (x y dx dy) probe-state
+               (cond ((and (<= *min-x* x *max-x*)
+                           (<= *min-y* y *max-y*))
+                      (return-from velocity-hits-target t))
+                     ((or (< y *min-y*)
+                          (> x *max-x*)) (return-from velocity-hits-target nil)))))))
 
 (let ((max-yvel (abs (1+ *min-y*))))
   (defun solve-17a ()
@@ -52,3 +50,11 @@
           appending (loop for dy from *min-y* upto max-yvel
                           when (velocity-hits-target dx dy)
                             collect (list dx dy)))))
+
+(defun solve-stupid ()
+  "Lmao this problem can just be brute forced"
+  (loop for dx from 0 upto 1000
+        ;; 1000 is a total fucking guess god I'm disappointed
+        appending (loop for dy from -1000 upto 1000
+                        when (velocity-hits-target dx dy)
+                          collect (list dx dy))))
