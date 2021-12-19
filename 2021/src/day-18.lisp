@@ -43,6 +43,18 @@
   (-<> (uiop:read-file-lines fname)
     (mapcar #'snum-from-str <>)))
 
+(defun copy-snum (snum parent)
+  (if snum
+      (let ((snum-copy
+              (make-instance 'snail-num
+                             :depth (snum-depth snum)
+                             :val (snum-val snum)
+                             :parent parent)))
+        (setf (snum-left snum-copy) (copy-snum (snum-left snum) snum-copy))
+        (setf (snum-right snum-copy) (copy-snum (snum-right snum) snum-copy))
+        snum-copy)
+      nil))
+
 (defun mutating-snum-traverse (snum down-going-left? incf-val)
   (let ((down-fn (if down-going-left?
                      #'snum-left #'snum-right))
@@ -133,12 +145,20 @@
       (reduce-snail-num new-root)
       new-root)))
 
+(defun magnitude (snum)
+  (if (snum-number? snum)
+      (snum-val snum)
+      (+ (* 3 (magnitude (snum-left snum)))
+         (* 2 (magnitude (snum-right snum))))))
+
 (defun solve-17a (fname)
-  (labels ((magnitude (snum)
-             (if (snum-number? snum)
-                 (snum-val snum)
-                 (+ (* 3 (magnitude (snum-left snum)))
-                    (* 2 (magnitude (snum-right snum)))))))
-    (let ((final-snum (reduce #'snum-add (get-input fname))))
-      (format t "Final snum is ~a~%" (snum-to-tree final-snum))
-      (magnitude final-snum))))
+  (let ((final-snum (reduce #'snum-add (get-input fname))))
+    ;; (format t "Final snum is ~a~%" (snum-to-tree final-snum))
+    (magnitude final-snum)))
+
+(defun solve-17b (fname)
+  (let ((snums (get-input fname)))
+    (loop for (snum1 snum2) in (loop for s1 in snums appending (loop for s2 in snums
+                                                                     when (not (eq s1 s2))
+                                                                       collecting (list s1 s2)))
+          maximizing (magnitude (snum-add snum1 snum2)))))
