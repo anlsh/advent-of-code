@@ -49,11 +49,14 @@
         (pchild (if down-going-left?
                     #'snum-right #'snum-left)))
     (loop with snum = snum
-          with snum-parent = (snum-parent snum)
+          for snum-parent = (snum-parent snum)
           when (not snum-parent)
             do (return nil)
+          do (format t "Considering parent snum ~a~%" (snum-to-tree snum-parent))
           when (eq snum (funcall down-fn snum-parent))
             do (return (loop with snum = (funcall pchild snum-parent)
+                               initially
+                                  (format t "Found subtree ~a~%" (snum-to-tree snum))
                              for next-snum = (funcall down-fn snum)
                              while next-snum
                              do (setf snum next-snum)
@@ -71,7 +74,7 @@
                (incf-snum-depths (snum-right snum))))
            (get-explodable (snum)
              (unless (snum-number? snum)
-               (if (and (>= (snum-depth snum) 4)
+               (if (and (>= (snum-depth snum) 5)
                         (snum-number? (snum-left snum))
                         (snum-number? (snum-right snum)))
                    (return-from get-explodable snum))
@@ -88,13 +91,13 @@
               explode-tag
                 (loop for explode-node = (get-explodable snum)
                       while explode-node
-                      do (progn (format t "Explodring ~a~%" (snum-to-tree explode-node))
+                      do (progn (format t "~%Exploding ~a" (snum-to-tree explode-node))
                                 (print "Left branch")
-                                (mutating-snum-traverse (snum-parent explode-node)
+                                (mutating-snum-traverse explode-node
                                                         nil
                                                         (snum-val (snum-left explode-node)))
                                 (print "Right branch")
-                                (mutating-snum-traverse (snum-parent explode-node)
+                                (mutating-snum-traverse explode-node
                                                         t
                                                         (snum-val (snum-right explode-node)))
                                 (setf (snum-left explode-node) nil
@@ -118,6 +121,8 @@
                                    :left a
                                    :right b
                                    :depth 0)))
+      (setf (snum-parent a) new-root
+            (snum-parent b) new-root)
       (incf-snum-depths new-root)
       (format t "After initial addition ~a~%" (snum-to-tree new-root))
       (reduce-snail-num new-root)
