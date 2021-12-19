@@ -39,8 +39,8 @@
       (list (snum-to-tree (snum-left snum))
             (snum-to-tree (snum-right snum)))))
 
-(defparameter *input*
-  (-<> (uiop:read-file-lines "../inputs/18.txt")
+(defun get-input (fname)
+  (-<> (uiop:read-file-lines fname)
     (mapcar #'snum-from-str <>)))
 
 (defun mutating-snum-traverse (snum down-going-left? incf-val)
@@ -52,16 +52,16 @@
           for snum-parent = (snum-parent snum)
           when (not snum-parent)
             do (return nil)
-          do (format t "Considering parent snum ~a~%" (snum-to-tree snum-parent))
+               ;; do (format t "Considering parent snum ~a~%" (snum-to-tree snum-parent))
           when (eq snum (funcall down-fn snum-parent))
             do (return (loop with snum = (funcall pchild snum-parent)
-                               initially
-                                  (format t "Found subtree ~a~%" (snum-to-tree snum))
+                             ;; initially
+                             ;;    (format t "Found subtree ~a~%" (snum-to-tree snum))
                              for next-snum = (funcall down-fn snum)
                              while next-snum
                              do (setf snum next-snum)
                              finally
-                                (format t "Incrementing ~a by ~a~%" (snum-val snum) incf-val)
+                                ;; (format t "Incrementing ~a by ~a~%" (snum-val snum) incf-val)
                                 (incf (snum-val snum) incf-val)))
           do
              (setf snum snum-parent))))
@@ -74,7 +74,7 @@
                (incf-snum-depths (snum-right snum))))
            (get-explodable (snum)
              (unless (snum-number? snum)
-               (if (and (>= (snum-depth snum) 5)
+               (if (and (> (snum-depth snum) 4)
                         (snum-number? (snum-left snum))
                         (snum-number? (snum-right snum)))
                    (return-from get-explodable snum))
@@ -91,31 +91,36 @@
               explode-tag
                 (loop for explode-node = (get-explodable snum)
                       while explode-node
-                      do (progn (format t "~%Exploding ~a" (snum-to-tree explode-node))
-                                (print "Left branch")
+                      do (progn nil
+                                ;; (format t "~%Exploding ~a" (snum-to-tree explode-node))
+                                ;; (print "Left branch")
                                 (mutating-snum-traverse explode-node
                                                         nil
                                                         (snum-val (snum-left explode-node)))
-                                (print "Right branch")
+                                ;; (print "Right branch")
                                 (mutating-snum-traverse explode-node
                                                         t
                                                         (snum-val (snum-right explode-node)))
                                 (setf (snum-left explode-node) nil
                                       (snum-right explode-node) nil
                                       (snum-val explode-node) 0)
-                                (format t "After explode: ~a~%" (snum-to-tree snum))))
+                                ;; (format t "After explode: ~a~%" (snum-to-tree snum))
+                                ))
               split-tag
                 (let ((split-node (get-splittable snum)))
                   (when split-node
                     (let ((depth (snum-depth split-node))
                           (val (snum-val split-node)))
-                      (format t "Splitting val ~a~%" val)
+                      ;; (format t "Splitting val ~a~%" val)
                       (setf (snum-left split-node) (make-instance 'snail-num :val (floor (/ val 2))
-                                                                             :depth (1+ depth))
+                                                                             :depth (1+ depth)
+                                                                             :parent split-node)
                             (snum-right split-node) (make-instance 'snail-num :val (ceiling (/ val 2))
-                                                                              :depth (1+ depth))
+                                                                              :depth (1+ depth)
+                                                                              :parent split-node)
                             (snum-val split-node) nil)
-                      (format t "After split ~a~%" (snum-to-tree snum)))
+                      ;; (format t "After split ~a~%" (snum-to-tree snum))
+                      )
                     (go explode-tag))))))
     (let ((new-root (make-instance 'snail-num
                                    :left a
@@ -124,9 +129,16 @@
       (setf (snum-parent a) new-root
             (snum-parent b) new-root)
       (incf-snum-depths new-root)
-      (format t "After initial addition ~a~%" (snum-to-tree new-root))
+      ;; (format t "After initial addition ~a~%" (snum-to-tree new-root))
       (reduce-snail-num new-root)
       new-root)))
 
-(defun solve-17a ()
-  (reduce #'snum-add *input*))
+(defun solve-17a (fname)
+  (labels ((magnitude (snum)
+             (if (snum-number? snum)
+                 (snum-val snum)
+                 (+ (* 3 (magnitude (snum-left snum)))
+                    (* 2 (magnitude (snum-right snum)))))))
+    (let ((final-snum (reduce #'snum-add (get-input fname))))
+      (format t "Final snum is ~a~%" (snum-to-tree final-snum))
+      (magnitude final-snum))))
