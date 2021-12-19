@@ -128,9 +128,5 @@
       (reduce-snail-num new-root)
       new-root)))
 
-;; (defun snail-sum (a b)
-;;   (let ((unreduced (list a b)))
-;;     ))
-
-;; (defun solve-17a ()
-;;   (reduce #'snail-sum *input*))
+(defun solve-17a ()
+  (reduce #'snum-add *input*))
