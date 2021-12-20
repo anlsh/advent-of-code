@@ -12,4 +12,11 @@
    :advent/2021/src/day-10
    :advent/2021/src/day-11
    :advent/2021/src/day-12
+   :advent/2021/src/day-13
+   :advent/2021/src/day-14
+   :advent/2021/src/day-15
+   :advent/2021/src/day-16
+   :advent/2021/src/day-17
+   :advent/2021/src/day-18
+   :advent/2021/src/day-19
    ))
