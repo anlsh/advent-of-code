@@ -5,8 +5,9 @@ import itertools
 import sys
 
 NDIMS = 3
-DTYPE = int
 MIN_INTER = 12
+DTYPE = int
+PRINT_PROGRESS = False
 
 def get_points(fname):
     radar_scans = []
@@ -33,13 +34,16 @@ def vecs2tupleset(vecs):
 all_axes = [vecs2tupleset([vec, -1 * vec]) for vec in np.eye(NDIMS, dtype=DTYPE)]
 all_axes = set().union(*all_axes)
 
+def t2v(tup):
+    return np.array(tup, dtype=DTYPE)
+
 def orthogonal_fn(x):
-    dot = np.dot(np.array(x[0], dtype=DTYPE), np.array(x[1], dtype=DTYPE))
+    dot = np.dot(t2v(x[0]), t2v(x[1]))
     return dot == 0
 
 def tform_from_xy(x, y):
-    x = np.array(x, dtype=DTYPE)
-    y = np.array(y, dtype=DTYPE)
+    x = t2v(x)
+    y = t2v(y)
     return np.asarray([x, y, np.cross(x, y)], dtype=DTYPE)
 
 if NDIMS == 3:
@@ -47,8 +51,7 @@ if NDIMS == 3:
                         filter(orthogonal_fn, itertools.permutations(all_axes, 2)))
 elif NDIMS == 2:
     k = list(filter(orthogonal_fn, itertools.permutations(all_axes, 2)))
-    valid_tforms = list(np.array([np.array(x), np.array(y)]) for x, y in k)
-
+    valid_tforms = list(np.array([t2v(x), t2v(y)]) for x, y in k)
 
 incompat_scanners = set()
 
@@ -59,15 +62,15 @@ def add_another_set(fixed_psets, floating_psets):
     (ie point-set is already transformed)
     """
 
-    for fixed_idx, fixed_points, _ in fixed_psets:
-        root_fixed_point = np.array(next(iter(fixed_points)), dtype=DTYPE)
+    for fixed_idx, fixed_points, _, _ in fixed_psets:
+        root_fixed_point = t2v(next(iter(fixed_points)))
         for floating_idx, raw_points in  floating_psets:
-            key = tuple((fixed_idx, floating_idx))
+            key = tuple(sorted((fixed_idx, floating_idx)))
             if key in incompat_scanners:
                 continue
 
             for root_fixed_point in fixed_points:
-                root_fixed_point = np.array(root_fixed_point, dtype=DTYPE)
+                root_fixed_point = t2v(root_fixed_point)
                 for axes_tform in valid_tforms:
                     axes_tformed_pts = [np.dot(x, axes_tform).flatten() for x in raw_points]
                     for tformed_pt in axes_tformed_pts:
@@ -76,10 +79,10 @@ def add_another_set(fixed_psets, floating_psets):
                                                 for pt in axes_tformed_pts])
 
                         if len(set.intersection(fixed_points, fully_tformed_pts)) >= MIN_INTER:
-                            print(f"Pset {floating_idx} is at {mb_root} by comparision with {fixed_idx}")
-                            print(f"Transform for above is\n {axes_tform}")
+                            if PRINT_PROGRESS:
+                                print(f"Pset {floating_idx} is at {mb_root} by comparision with {fixed_idx}")
                             return (
-                                fixed_psets + [(floating_idx, fully_tformed_pts, axes_tform)],
+                                fixed_psets + [(floating_idx, fully_tformed_pts, tuple(mb_root), axes_tform)],
                                 [r for r in  floating_psets if r[0] != floating_idx]
                             )
 
@@ -88,11 +91,18 @@ def add_another_set(fixed_psets, floating_psets):
 
 if __name__ == "__main__":
     psets = get_points(sys.argv[1])
-    print([p[0] for p in psets])
-    fixed_psets = [(psets[0][0], psets[0][1], np.eye(NDIMS, dtype=DTYPE))]
+    fixed_psets = [(psets[0][0], psets[0][1], np.zeros(NDIMS), np.eye(NDIMS, dtype=DTYPE))]
     floating_psets = psets[1:]
 
     while len(floating_psets) > 0:
         fixed_psets, floating_psets = add_another_set(fixed_psets, floating_psets)
 
+    print("Part A: ", end="")
     print(len(set().union(*[sol[1] for sol in fixed_psets])))
+
+    max_dist = 0
+    offsets = [fix[2] for fix in fixed_psets]
+    for m1, m2 in itertools.combinations(offsets, 2):
+        print(m1, m2)
+        max_dist = max(max_dist, int(np.linalg.norm(t2v(m1) - t2v(m2), ord=1)))
+    print(f"Part B: {max_dist}")
