@@ -49,6 +49,9 @@ elif NDIMS == 2:
     k = list(filter(orthogonal_fn, itertools.permutations(all_axes, 2)))
     valid_tforms = list(np.array([np.array(x), np.array(y)]) for x, y in k)
 
+
+incompat_scanners = set()
+
 def add_another_set(fixed_psets, floating_psets):
     """
     fixed_psets is a list of (scanner_index, point-set, transformation)
@@ -56,11 +59,15 @@ def add_another_set(fixed_psets, floating_psets):
     (ie point-set is already transformed)
     """
 
-    for _, fixed_points, _ in fixed_psets:
+    for fixed_idx, fixed_points, _ in fixed_psets:
         root_fixed_point = np.array(next(iter(fixed_points)), dtype=DTYPE)
-        for root_fixed_point in fixed_points:
-            root_fixed_point = np.array(root_fixed_point, dtype=DTYPE)
-            for raw_idx, raw_points in  floating_psets:
+        for floating_idx, raw_points in  floating_psets:
+            key = tuple((fixed_idx, floating_idx))
+            if key in incompat_scanners:
+                continue
+
+            for root_fixed_point in fixed_points:
+                root_fixed_point = np.array(root_fixed_point, dtype=DTYPE)
                 for axes_tform in valid_tforms:
                     axes_tformed_pts = [np.dot(x, axes_tform).flatten() for x in raw_points]
                     for tformed_pt in axes_tformed_pts:
@@ -69,11 +76,15 @@ def add_another_set(fixed_psets, floating_psets):
                                                 for pt in axes_tformed_pts])
 
                         if len(set.intersection(fixed_points, fully_tformed_pts)) >= MIN_INTER:
-                            print(f"Pset {raw_idx} is at {mb_root}")
+                            print(f"Pset {floating_idx} is at {mb_root} by comparision with {fixed_idx}")
+                            print(f"Transform for above is\n {axes_tform}")
                             return (
-                                fixed_psets + [(raw_idx, fully_tformed_pts, axes_tform)],
-                                [r for r in  floating_psets if r[0] != raw_idx]
+                                fixed_psets + [(floating_idx, fully_tformed_pts, axes_tform)],
+                                [r for r in  floating_psets if r[0] != floating_idx]
                             )
+
+            # We're at this point -> fixed_idx & floating_idx cannot be aligned
+            incompat_scanners.add(key)
 
 if __name__ == "__main__":
     psets = get_points(sys.argv[1])
