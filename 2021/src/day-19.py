@@ -2,24 +2,26 @@ import fileinput
 import numpy as np
 from functools import reduce
 import itertools
+import sys
 
-NDIMS = 2
+NDIMS = 3
 DTYPE = int
-MIN_INTER = 3
+MIN_INTER = 12
 
-def get_points():
+def get_points(fname):
     radar_scans = []
     curr_scan = set()
     scan_num = 0
-    for line in fileinput.input():
-        if len(line.strip()) == 0:
-            scan_num += 1
-            radar_scans.append((scan_num, curr_scan))
-            curr_scan = set()
-        elif line[1] == "-":
-            pass
-        else:
-            curr_scan.add(tuple(int(x) for x in line.strip().split(",")))
+    with open(fname) as f:
+        for line in f.readlines():
+            if line == "\n":
+                radar_scans.append((scan_num, curr_scan))
+                scan_num += 1
+                curr_scan = set()
+            elif line[1] == "-":
+                pass
+            else:
+                curr_scan.add(tuple(int(x) for x in line.strip().split(",")))
 
     radar_scans.append((scan_num, curr_scan))
     return radar_scans
@@ -47,15 +49,18 @@ elif NDIMS == 2:
     k = list(filter(orthogonal_fn, itertools.permutations(all_axes, 2)))
     valid_tforms = list(np.array([np.array(x), np.array(y)]) for x, y in k)
 
-def add_another_set(fixed_scanner_sets, remaining_scanner_sets):
+def add_another_set(fixed_psets, floating_psets):
     """
-    fixed_scanner_sets is a list of (scanner_index, point-set, transformation)
+    fixed_psets is a list of (scanner_index, point-set, transformation)
     tuples where the transformation brought the scanner's points to point_set
     (ie point-set is already transformed)
     """
-    for _, fixed_points, _ in fixed_scanner_sets:
+
+    print(f'Indices of fixed sets are {[r[0] for r in fixed_psets]}')
+    print(f'Indices of floating sets are {[r[0] for r in floating_psets]}')
+    for _, fixed_points, _ in fixed_psets:
         root_fixed_point = np.array(next(iter(fixed_points)), dtype=DTYPE)
-        for raw_idx, raw_points in remaining_scanner_sets:
+        for raw_idx, raw_points in  floating_psets:
             for axes_tform in valid_tforms:
                 axes_tformed_pts = [np.dot(x, axes_tform).flatten() for x in raw_points]
                 for tformed_pt in axes_tformed_pts:
@@ -63,17 +68,18 @@ def add_another_set(fixed_scanner_sets, remaining_scanner_sets):
                     fully_tformed_pts = set([tuple((pt + mb_root).flatten())
                                              for pt in axes_tformed_pts])
 
-                    iset_inters = set.intersection(fixed_points, fully_tformed_pts)
-                    if len(iset_inters) >= MIN_INTER:
+                    if len(set.intersection(fixed_points, fully_tformed_pts)) >= MIN_INTER:
+                        print(f"Pset {raw_idx} is at {mb_root}")
                         return (
-                            fixed_scanner_sets + [(raw_idx, fully_tformed_pts, axes_tform)],
-                            [r for r in remaining_scanner_sets if r[0] != raw_idx]
+                            fixed_psets + [(raw_idx, fully_tformed_pts, axes_tform)],
+                            [r for r in  floating_psets if r[0] != raw_idx]
                         )
 
 
 
 if __name__ == "__main__":
-    psets = get_points()
+    psets = get_points(sys.argv[1])
+    print([p[0] for p in psets])
     fixed_psets = [(psets[0][0], psets[0][1], np.eye(NDIMS, dtype=DTYPE))]
     floating_psets = psets[1:]
 
