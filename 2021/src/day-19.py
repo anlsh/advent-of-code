@@ -56,26 +56,24 @@ def add_another_set(fixed_psets, floating_psets):
     (ie point-set is already transformed)
     """
 
-    print(f'Indices of fixed sets are {[r[0] for r in fixed_psets]}')
-    print(f'Indices of floating sets are {[r[0] for r in floating_psets]}')
     for _, fixed_points, _ in fixed_psets:
         root_fixed_point = np.array(next(iter(fixed_points)), dtype=DTYPE)
-        for raw_idx, raw_points in  floating_psets:
-            for axes_tform in valid_tforms:
-                axes_tformed_pts = [np.dot(x, axes_tform).flatten() for x in raw_points]
-                for tformed_pt in axes_tformed_pts:
-                    mb_root = root_fixed_point - tformed_pt
-                    fully_tformed_pts = set([tuple((pt + mb_root).flatten())
-                                             for pt in axes_tformed_pts])
+        for root_fixed_point in fixed_points:
+            root_fixed_point = np.array(root_fixed_point, dtype=DTYPE)
+            for raw_idx, raw_points in  floating_psets:
+                for axes_tform in valid_tforms:
+                    axes_tformed_pts = [np.dot(x, axes_tform).flatten() for x in raw_points]
+                    for tformed_pt in axes_tformed_pts:
+                        mb_root = root_fixed_point - tformed_pt
+                        fully_tformed_pts = set([tuple((pt + mb_root).flatten())
+                                                for pt in axes_tformed_pts])
 
-                    if len(set.intersection(fixed_points, fully_tformed_pts)) >= MIN_INTER:
-                        print(f"Pset {raw_idx} is at {mb_root}")
-                        return (
-                            fixed_psets + [(raw_idx, fully_tformed_pts, axes_tform)],
-                            [r for r in  floating_psets if r[0] != raw_idx]
-                        )
-
-
+                        if len(set.intersection(fixed_points, fully_tformed_pts)) >= MIN_INTER:
+                            print(f"Pset {raw_idx} is at {mb_root}")
+                            return (
+                                fixed_psets + [(raw_idx, fully_tformed_pts, axes_tform)],
+                                [r for r in  floating_psets if r[0] != raw_idx]
+                            )
 
 if __name__ == "__main__":
     psets = get_points(sys.argv[1])
@@ -85,3 +83,5 @@ if __name__ == "__main__":
 
     while len(floating_psets) > 0:
         fixed_psets, floating_psets = add_another_set(fixed_psets, floating_psets)
+
+    print(len(set().union(*[sol[1] for sol in fixed_psets])))
