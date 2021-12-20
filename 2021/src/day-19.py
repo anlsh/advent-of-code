@@ -53,25 +53,15 @@ def add_another_set(fixed_scanner_sets, remaining_scanner_sets):
     tuples where the transformation brought the scanner's points to point_set
     (ie point-set is already transformed)
     """
-    # print(remaining_scanner_sets)
     for _, fixed_points, _ in fixed_scanner_sets:
         root_fixed_point = np.array(next(iter(fixed_points)), dtype=DTYPE)
-        # print(f"root_fixed_point is {root_fixed_point}")
         for raw_idx, raw_points in remaining_scanner_sets:
-            # print(f"raw_points: {raw_points}")
             for axes_tform in valid_tforms:
                 axes_tformed_pts = [np.dot(x, axes_tform).flatten() for x in raw_points]
-                # print(f"axes_tform: {axes_tform} -> {axes_tformed_pts}")
                 for tformed_pt in axes_tformed_pts:
                     mb_root = root_fixed_point - tformed_pt
-                    # print(f"Perhaps the root is {mb_root}")
                     fully_tformed_pts = set([tuple((pt + mb_root).flatten())
                                              for pt in axes_tformed_pts])
-                    # if (mb_root == np.array([5, 2], dtype=DTYPE)).all() \
-                    #    and (axes_tform == np.eye(NDIMS, dtype=DTYPE)).all():
-                    #     print("YOOOODLE")
-                    #     print(axes_tformed_pts)
-                    #     print(fully_tformed_pts)
 
                     iset_inters = set.intersection(fixed_points, fully_tformed_pts)
                     if len(iset_inters) >= MIN_INTER:
