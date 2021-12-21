@@ -7,7 +7,7 @@ import sys
 NDIMS = 3
 MIN_INTER = 12
 DTYPE = int
-PRINT_PROGRESS = False
+PRINT_PROGRESS = True
 
 def get_points(fname):
     radar_scans = []
