@@ -5,7 +5,7 @@ import itertools
 import sys
 
 NDIMS = 3
-MIN_INTER = 12
+MIN_INTER = 3
 DTYPE = int
 PRINT_PROGRESS = True
 
@@ -103,6 +103,5 @@ if __name__ == "__main__":
     max_dist = 0
     offsets = [fix[2] for fix in fixed_psets]
     for m1, m2 in itertools.combinations(offsets, 2):
-        print(m1, m2)
         max_dist = max(max_dist, int(np.linalg.norm(t2v(m1) - t2v(m2), ord=1)))
     print(f"Part B: {max_dist}")
