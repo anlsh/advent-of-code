@@ -11,9 +11,9 @@ def get_cubes(fname):
         cubes.append((
             r.group(1) == "on",
             (
-                (int(r.group(2)), int(r.group(3))),
-                (int(r.group(4)), int(r.group(5))),
-                (int(r.group(6)), int(r.group(7)))
+                int(r.group(2)), int(r.group(3)),
+                int(r.group(4)), int(r.group(5)),
+                int(r.group(6)), int(r.group(7))
             )
         ))
 
