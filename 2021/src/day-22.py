@@ -19,41 +19,62 @@ def get_cubes(fname):
 
     return cubes
 
-def part_a(cubes):
-    state = [[[False for _ in range(101)] for _ in range(101)] for _ in range(101)]
-    for turn_on, dims in cubes:
-        if (-50 <= dims[0]) and (dims[1] <= 50) \
-           and (-50 <= dims[2]) and (dims[3] <= 50) \
-           and (-50 <= dims[4]) and (dims[5] <= 50):
-            for x in range(dims[0], dims[1] + 1):
-                for y in range(dims[2], dims[3] + 1):
-                    for z in range(dims[4], dims[5] + 1):
-                        state[x + 50][y + 50][z + 50] = turn_on
+def ivals_int(i1, i2):
+    if i2[0] < i1[0]:
+        i1, i2 = i2, i1
 
-
-    count = 0
-    for x in range(0, 101):
-        for y in range(0, 101):
-            for z in range(0, 101):
-                if state[x][y][z]:
-                    count += 1
-    return count
-
-def ivals_int(xs, ys):
-    if ys[0] < xs[0]:
-        xs, ys = ys, xs
-    if ys[0] <= xs[1]:
-        return ys[1], xs[1]
+    if i2[0] <= i1[1]:
+        ranges = (
+            (i1[0], i2[0] - 1),
+            (i2[0], min(i1[1], i2[1])),
+            (min(i1[1], i2[1]) + 1, max(i1[1], i2[1]))
+        )
+        return True, tuple((r for r in ranges if r[0] <= r[1]))
     else:
-        return None
+        return False, None
 
-def do_boxes_intersect(b1, b2):
-    return invals_int((b1[0], b2[]))
+def box_contains(container, b):
+    return (container[0][0] <= b[0][0] <= b[0][1] <= container[0][1]) \
+        and (container[1][0] <= b[1][0] <= b[1][1] <= container[1][1]) \
+        and (container[2][0] <= b[2][0] <= b[2][1] <= container[2][1])
 
+def refine_boxes(disjoint_boxes, new_boxes):
+    if len(new_boxes) == 0:
+        return disjoint_boxes
 
-def refine_boxes(boxlist, new_box):
+    new_box = new_boxes[0]
 
+    # disjoint_from_newest = []
+    for i, box in enumerate(disjoint_boxes):
+        xint, xrs = ivals_int(box[0], new_box[0])
+        if not xint:
+            # disjoint_from_newest.append(box)
+            continue
+        yint, yrs = ivals_int(box[1], new_box[1])
+        if not yint:
+            # disjoint_from_newest.append(box)
+            continue
+        zint, zrs = ivals_int(box[2], new_box[2])
+        if not zint:
+            # disjoint_from_newest.append(box)
+            continue
+
+        curr_box_refines = []
+        for xr in xrs:
+            for yr in yrs:
+                for zr in zrs:
+                    rs = (xr, yr, zr)
+                    if box_contains(new_box, rs) or box_contains(box, rs):
+                        curr_box_refines.append(rs)
+
+        return refine_boxes(
+            disjoint_boxes[:i] + curr_box_refines,
+            disjoint_boxes[i+1:] + new_boxes[1:]
+        )
+
+    return refine_boxes(disjoint_boxes + [new_box], new_boxes[1:])
 
 if __name__ == "__main__":
-    cubes = get_cubes(sys.argv[1])
-    print(f"Part A: {part_a(cubes)}")
+    ops = get_cubes(sys.argv[1])
+    # print(f"Part A: {part_a(cubes)}")
+    print(refine_boxes([], [op[1] for op in ops]))
