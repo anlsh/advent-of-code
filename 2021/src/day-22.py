@@ -53,7 +53,7 @@ def ref_two_bs(b1, b2):
                     rs = (xr, yr, zr)
                     if box_contains(b1, rs) or box_contains(b2, rs):
                         refinements.append(rs)
-        print(f"Refined {len(refinements)} from {b1}, {b2}")
+        # print(f"Refined {len(refinements)} from {b1}, {b2}")
         # print(f"From intervals {xrs, yrs, zrs}")
         return refinements
     else:
@@ -77,9 +77,9 @@ def refine_boxes(boxes):
     for i in range(len(boxes)):
         if i not in boxes_with_inters:
             cands.append(boxes[i])
-            print(f"Appending {boxes[i]} to candidates due to no-inter")
+            # print(f"Appending {boxes[i]} to candidates due to no-inter")
 
-    print(f"Going into containment step, len(cads) == {len(cands)}")
+    # print(f"Going into containment step, len(cads) == {len(cands)}")
     real_cands = []
     for i in range(len(cands)):
         c1 = cands[i]
@@ -93,9 +93,9 @@ def refine_boxes(boxes):
                 break
         if not contains_another:
             real_cands.append(c1)
-            print(f"Appended {c1} to real_cands b/c no-contain")
+            # print(f"Appended {c1} to real_cands b/c no-contain")
 
-    return real_cands, len(boxes_with_inters) == 0
+    return real_cands, len(boxes_with_inters) > 0
 
 if __name__ == "__main__":
     ops = get_cubes(sys.argv[1])
