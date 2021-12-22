@@ -38,7 +38,52 @@ def box_contains(container, b):
         and (container[1][0] <= b[1][0] <= b[1][1] <= container[1][1]) \
         and (container[2][0] <= b[2][0] <= b[2][1] <= container[2][1])
 
-def refine_boxes(nondisj_boxes):
+def add_to_disj_boxes(disj_boxes, new_box):
+
+    disjoint_from_new_box = []
+    possible_nbox_regions = [new_box]
+
+    for obox in disj_boxes:
+        xint, xrs = ivals_int(obox[0], new_box[0])
+        yint, yrs = ivals_int(obox[1], new_box[1])
+        zint, zrs = ivals_int(obox[2], new_box[2])
+
+        if not (xint and yint and zint):
+            disjoint_from_new_box.append(obox)
+        else:
+            for xr in xrs:
+                for yr in yrs:
+                    for zr in zrs:
+                        rs = (xr, yr, zr)
+                        in_new_box = box_contains(new_box, rs)
+                        in_old_box = box_contains(obox, rs)
+
+                        if not (in_old_box or in_new_box):
+                            pass
+                        elif in_old_box and (not in_new_box):
+                            disjoint_from_new_box.append(rs)
+                        else:
+                            possible_nbox_regions.append(rs)
+
+# box = disj_boxes[i]
+# i += 1
+# xint, xrs = ivals_int(box[0], new_box[0])
+# yint, yrs = ivals_int(box[1], new_box[1])
+# zint, zrs = ivals_int(box[2], new_box[2])
+
+# if not (xint and yint and zint):
+#     new_disj_boxes.append(box)
+# else:
+#     for xr in xrs:
+#         for yr in yrs:
+#             for zr in zrs:
+#                 rs = (xr, yr, zr)
+#                 if box_contains(new_box, rs) or box_contains(box, rs):
+#                     new_disj_boxes.append(rs)
+
+#     break
+
+def refine_boxes(disj_boxes, new_box):
 
     disj_boxes = []
 
@@ -49,23 +94,6 @@ def refine_boxes(nondisj_boxes):
         new_disj_boxes = []
 
         while i < len(disj_boxes):
-            box = disj_boxes[i]
-            i += 1
-            xint, xrs = ivals_int(box[0], new_box[0])
-            yint, yrs = ivals_int(box[1], new_box[1])
-            zint, zrs = ivals_int(box[2], new_box[2])
-
-            if not (xint and yint and zint):
-                new_disj_boxes.append(box)
-            else:
-                for xr in xrs:
-                    for yr in yrs:
-                        for zr in zrs:
-                            rs = (xr, yr, zr)
-                            if box_contains(new_box, rs) or box_contains(box, rs):
-                                new_disj_boxes.append(rs)
-
-                break
 
         if len(new_disj_boxes) == len(disj_boxes):
             disj_boxes = disj_boxes + [new_box]
