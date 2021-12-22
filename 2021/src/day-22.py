@@ -38,43 +38,47 @@ def box_contains(container, b):
         and (container[1][0] <= b[1][0] <= b[1][1] <= container[1][1]) \
         and (container[2][0] <= b[2][0] <= b[2][1] <= container[2][1])
 
-def refine_boxes(disjoint_boxes, new_boxes):
-    if len(new_boxes) == 0:
-        return disjoint_boxes
+def refine_boxes(nondisj_boxes):
 
-    new_box = new_boxes[0]
+    disj_boxes = []
 
-    # disjoint_from_newest = []
-    for i, box in enumerate(disjoint_boxes):
-        xint, xrs = ivals_int(box[0], new_box[0])
-        if not xint:
-            # disjoint_from_newest.append(box)
-            continue
-        yint, yrs = ivals_int(box[1], new_box[1])
-        if not yint:
-            # disjoint_from_newest.append(box)
-            continue
-        zint, zrs = ivals_int(box[2], new_box[2])
-        if not zint:
-            # disjoint_from_newest.append(box)
-            continue
+    while len(nondisj_boxes) > 0:
+        new_box = nondisj_boxes[0]
+        i = 0
 
-        curr_box_refines = []
-        for xr in xrs:
-            for yr in yrs:
-                for zr in zrs:
-                    rs = (xr, yr, zr)
-                    if box_contains(new_box, rs) or box_contains(box, rs):
-                        curr_box_refines.append(rs)
+        new_disj_boxes = []
 
-        return refine_boxes(
-            disjoint_boxes[:i] + curr_box_refines,
-            disjoint_boxes[i+1:] + new_boxes[1:]
-        )
+        while i < len(disj_boxes):
+            box = disj_boxes[i]
+            i += 1
+            xint, xrs = ivals_int(box[0], new_box[0])
+            yint, yrs = ivals_int(box[1], new_box[1])
+            zint, zrs = ivals_int(box[2], new_box[2])
 
-    return refine_boxes(disjoint_boxes + [new_box], new_boxes[1:])
+            if not (xint and yint and zint):
+                new_disj_boxes.append(box)
+            else:
+                for xr in xrs:
+                    for yr in yrs:
+                        for zr in zrs:
+                            rs = (xr, yr, zr)
+                            if box_contains(new_box, rs) or box_contains(box, rs):
+                                new_disj_boxes.append(rs)
+
+                break
+
+        if len(new_disj_boxes) == len(disj_boxes):
+            disj_boxes = disj_boxes + [new_box]
+            nondisj_boxes = nondisj_boxes[1:]
+        else:
+            unconsidered_disjs = disj_boxes[i:]
+            disj_boxes = new_disj_boxes
+            nondisj_boxes = unconsidered_disjs + nondisj_boxes[1:]
+
+    return disj_boxes
+
 
 if __name__ == "__main__":
     ops = get_cubes(sys.argv[1])
     # print(f"Part A: {part_a(cubes)}")
-    print(refine_boxes([], [op[1] for op in ops]))
+    print(refine_boxes([op[1] for op in ops]))
