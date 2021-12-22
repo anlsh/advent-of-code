@@ -38,75 +38,75 @@ def box_contains(container, b):
         and (container[1][0] <= b[1][0] <= b[1][1] <= container[1][1]) \
         and (container[2][0] <= b[2][0] <= b[2][1] <= container[2][1])
 
-def add_to_disj_boxes(disj_boxes, new_box):
+def ref_two_bs(b1, b2):
 
-    disjoint_from_new_box = []
-    possible_nbox_regions = [new_box]
+    # print(f"Refining boxes {b1}, {b2} => ", end="")
+    xint, xrs = ivals_int(b1[0], b2[0])
+    yint, yrs = ivals_int(b1[1], b2[1])
+    zint, zrs = ivals_int(b1[2], b2[2])
 
-    for obox in disj_boxes:
-        xint, xrs = ivals_int(obox[0], new_box[0])
-        yint, yrs = ivals_int(obox[1], new_box[1])
-        zint, zrs = ivals_int(obox[2], new_box[2])
+    if (xint and yint and zint):
+        refinements = []
+        for xr in xrs:
+            for yr in yrs:
+                for zr in zrs:
+                    rs = (xr, yr, zr)
+                    if box_contains(b1, rs) or box_contains(b2, rs):
+                        refinements.append(rs)
+        print(f"Refined {len(refinements)} from {b1}, {b2}")
+        # print(f"From intervals {xrs, yrs, zrs}")
+        return refinements
+    else:
+        # print("no intersection")
+        return []
 
-        if not (xint and yint and zint):
-            disjoint_from_new_box.append(obox)
-        else:
-            for xr in xrs:
-                for yr in yrs:
-                    for zr in zrs:
-                        rs = (xr, yr, zr)
-                        in_new_box = box_contains(new_box, rs)
-                        in_old_box = box_contains(obox, rs)
+def refine_boxes(boxes):
+    cands = []
+    boxes_with_inters = set()
 
-                        if not (in_old_box or in_new_box):
-                            pass
-                        elif in_old_box and (not in_new_box):
-                            disjoint_from_new_box.append(rs)
-                        else:
-                            possible_nbox_regions.append(rs)
+    for i in range(len(boxes)):
+        for j in range(i + 1, len(boxes)):
+            b1 = boxes[i]
+            b2 = boxes[j]
+            refs = ref_two_bs(b1, b2)
+            if len(refs) > 0:
+                boxes_with_inters.add(i)
+                boxes_with_inters.add(j)
+            cands.extend(refs)
 
-# box = disj_boxes[i]
-# i += 1
-# xint, xrs = ivals_int(box[0], new_box[0])
-# yint, yrs = ivals_int(box[1], new_box[1])
-# zint, zrs = ivals_int(box[2], new_box[2])
+    for i in range(len(boxes)):
+        if i not in boxes_with_inters:
+            cands.append(boxes[i])
+            print(f"Appending {boxes[i]} to candidates due to no-inter")
 
-# if not (xint and yint and zint):
-#     new_disj_boxes.append(box)
-# else:
-#     for xr in xrs:
-#         for yr in yrs:
-#             for zr in zrs:
-#                 rs = (xr, yr, zr)
-#                 if box_contains(new_box, rs) or box_contains(box, rs):
-#                     new_disj_boxes.append(rs)
+    print(f"Going into containment step, len(cads) == {len(cands)}")
+    real_cands = []
+    for i in range(len(cands)):
+        c1 = cands[i]
+        for j in range(i + 1, len(cands)):
+            c2 = cands[j]
+            contains_another = False
+            if c1 == c2:
+                continue
+            if box_contains(c1, c2):
+                contains_another = True
+                break
+        if not contains_another:
+            real_cands.append(c1)
+            print(f"Appended {c1} to real_cands b/c no-contain")
 
-#     break
-
-def refine_boxes(disj_boxes, new_box):
-
-    disj_boxes = []
-
-    while len(nondisj_boxes) > 0:
-        new_box = nondisj_boxes[0]
-        i = 0
-
-        new_disj_boxes = []
-
-        while i < len(disj_boxes):
-
-        if len(new_disj_boxes) == len(disj_boxes):
-            disj_boxes = disj_boxes + [new_box]
-            nondisj_boxes = nondisj_boxes[1:]
-        else:
-            unconsidered_disjs = disj_boxes[i:]
-            disj_boxes = new_disj_boxes
-            nondisj_boxes = unconsidered_disjs + nondisj_boxes[1:]
-
-    return disj_boxes
-
+    return real_cands, len(boxes_with_inters) == 0
 
 if __name__ == "__main__":
     ops = get_cubes(sys.argv[1])
-    # print(f"Part A: {part_a(cubes)}")
-    print(refine_boxes([op[1] for op in ops]))
+    boxes = [op[1] for op in ops]
+
+    cands = boxes
+    found_inter = True
+    i = 0
+    while found_inter:
+        print(f"Iteration {i}: Have {len(cands)} boxes to handle")
+        i += 1
+        cands, found_inter = refine_boxes(cands)
+
+    print(len(cands))
