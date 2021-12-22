@@ -1,7 +1,8 @@
 import sys
 import re
+from functools import reduce
 
-def get_cubes(fname):
+def get_ops(fname):
     with open(fname) as f:
         inp = [l.strip() for l in f.readlines()]
 
@@ -11,102 +12,49 @@ def get_cubes(fname):
         cubes.append((
             r.group(1) == "on",
             (
-                (int(r.group(2)), int(r.group(3))),
-                (int(r.group(4)), int(r.group(5))),
-                (int(r.group(6)), int(r.group(7)))
+                (int(r.group(2)), int(r.group(3)) + 1),
+                (int(r.group(4)), int(r.group(5)) + 1),
+                (int(r.group(6)), int(r.group(7)) + 1)
             )
         ))
 
     return cubes
 
-def ivals_int(i1, i2):
-    if i2[0] < i1[0]:
-        i1, i2 = i2, i1
+def count_lit_points(ops):
+    cubes = [op[1] for op in ops]
+    xs = sorted(reduce(lambda a, b: a + b, [list(c[0]) for c in cubes]))
+    ys = sorted(reduce(lambda a, b: a + b, [list(c[1]) for c in cubes]))
+    zs = sorted(reduce(lambda a, b: a + b, [list(c[2]) for c in cubes]))
+    print(f"The state size is {len(xs) * len(ys) * len(zs)}")
+    state = [[[False
+               for _ in range(len(zs))]
+              for _ in range(len(ys))]
+             for _ in range(len(xs))]
+    print(f"Made the state!")
 
-    if i2[0] <= i1[1]:
-        ranges = (
-            (i1[0], i2[0] - 1),
-            (i2[0], min(i1[1], i2[1])),
-            (min(i1[1], i2[1]) + 1, max(i1[1], i2[1]))
-        )
-        return True, tuple((r for r in ranges if r[0] <= r[1]))
-    else:
-        return False, None
+    x2i = {x: i for i, x in enumerate(xs)}
+    y2i = {y: i for i, y in enumerate(ys)}
+    z2i = {z: i for i, z in enumerate(zs)}
 
-def box_contains(container, b):
-    return (container[0][0] <= b[0][0] <= b[0][1] <= container[0][1]) \
-        and (container[1][0] <= b[1][0] <= b[1][1] <= container[1][1]) \
-        and (container[2][0] <= b[2][0] <= b[2][1] <= container[2][1])
+    n_lit = 0
+    for turn_on, box in ops:
+        for xi in range(x2i[box[0][0]], x2i[box[0][1]]):
+            for yi in range(y2i[box[1][0]], y2i[box[1][1]]):
+                for zi in range(z2i[box[2][0]], z2i[box[2][1]]):
+                    region_size = (xs[xi + 1] - xs[xi]) \
+                        * (ys[yi + 1] - ys[yi]) \
+                        * (zs[zi + 1] - zs[zi])
+                    if turn_on and not state[xi][yi][zi]:
+                        n_lit += region_size
+                        state[xi][yi][zi] = True
+                    elif (not turn_on) and state[xi][yi][zi]:
+                        n_lit -= region_size
+                        state[xi][yi][zi] = False
 
-def ref_two_bs(b1, b2):
-
-    # print(f"Refining boxes {b1}, {b2} => ", end="")
-    xint, xrs = ivals_int(b1[0], b2[0])
-    yint, yrs = ivals_int(b1[1], b2[1])
-    zint, zrs = ivals_int(b1[2], b2[2])
-
-    if (xint and yint and zint):
-        refinements = []
-        for xr in xrs:
-            for yr in yrs:
-                for zr in zrs:
-                    rs = (xr, yr, zr)
-                    if box_contains(b1, rs) or box_contains(b2, rs):
-                        refinements.append(rs)
-        # print(f"Refined {len(refinements)} from {b1}, {b2}")
-        # print(f"From intervals {xrs, yrs, zrs}")
-        return refinements
-    else:
-        # print("no intersection")
-        return []
-
-def refine_boxes(boxes):
-    cands = []
-    boxes_with_inters = set()
-
-    for i in range(len(boxes)):
-        for j in range(i + 1, len(boxes)):
-            b1 = boxes[i]
-            b2 = boxes[j]
-            refs = ref_two_bs(b1, b2)
-            if len(refs) > 0:
-                boxes_with_inters.add(i)
-                boxes_with_inters.add(j)
-            cands.extend(refs)
-
-    for i in range(len(boxes)):
-        if i not in boxes_with_inters:
-            cands.append(boxes[i])
-            # print(f"Appending {boxes[i]} to candidates due to no-inter")
-
-    # print(f"Going into containment step, len(cads) == {len(cands)}")
-    real_cands = []
-    for i in range(len(cands)):
-        c1 = cands[i]
-        for j in range(i + 1, len(cands)):
-            c2 = cands[j]
-            contains_another = False
-            if c1 == c2:
-                continue
-            if box_contains(c1, c2):
-                contains_another = True
-                break
-        if not contains_another:
-            real_cands.append(c1)
-            # print(f"Appended {c1} to real_cands b/c no-contain")
-
-    return real_cands, len(boxes_with_inters) > 0
+    return n_lit
 
 if __name__ == "__main__":
-    ops = get_cubes(sys.argv[1])
+    ops = get_ops(sys.argv[1])
     boxes = [op[1] for op in ops]
 
-    cands = boxes
-    found_inter = True
-    i = 0
-    while found_inter:
-        print(f"Iteration {i}: Have {len(cands)} boxes to handle")
-        i += 1
-        cands, found_inter = refine_boxes(cands)
-
-    print(len(cands))
+    print(count_lit_points(ops))
