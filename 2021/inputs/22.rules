@@ -1,0 +1,19 @@
+However, because they are timid and stubborn, the amphipods have some extra rules:
+
+    - Amphipods will never stop on the space immediately outside any room. They
+    can move into that space so long as they immediately continue moving.
+    (Specifically, this refers to the four open spaces in the hallway that are
+    directly above an amphipod starting position.)
+
+    - Amphipods will never move from the hallway into a room unless that room is
+      their destination room and that room contains no amphipods which do not
+      also have that room as their own destination. If an amphipod's starting
+      room is not its destination room, it can stay in that room until it leaves
+      the room. (For example, an Amber amphipod will not move from the hallway
+      into the right three rooms, and will only move into the leftmost room if
+      that room is empty or if it only contains other Amber amphipods.)
+
+    - Once an amphipod stops moving in the hallway, it will stay in that spot
+      until it can move into a room. (That is, once any amphipod starts moving,
+      any other amphipods currently in the hallway are locked in place and will
+      not move again until they can move fully into a room.)

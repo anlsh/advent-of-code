@@ -1,68 +1,20 @@
+import abc
 import sys
 import heapq
 
-# Below is a map of the positions
-#
-# 0 1 2 3 4 5 6 7 8 9 10
-#     1   3   5   7
-#     0   2   4   6
-#
-# 0 is an empty space
-# A, B, C, D are represented as 1, 2, 3, 4
-# Amphipods which are frozen in the hallway are incremented by 5
-# By the rules, the doorway positions should actually always be empty
+# Will have to change ROOM_SIZE depending on what file we're running with
+# There is some bounds checking done so that if you run w/ an
+# incorrectly-sized file, the script will error
+ROOM_SIZE = 4
 
-
-HALL_START = 8
+# Fundamental parameters, should never have to touch these
+ROOMS = (1, 2, 3, 4)
+APODS = ROOMS
 HALLWAY_SIZE = 11
-STATE_SIZE = HALL_START + HALLWAY_SIZE
-
-def state_from_file(fname):
-    def let2n(let):
-        if let == "A":
-            return 1
-        elif let == "B":
-            return 2
-        elif let == "C":
-            return 3
-        elif let == "D":
-            return 4
-        elif let == ".":
-            return 0
-
-    with open(fname) as f:
-        lines = [l.rstrip() for l in f.readlines()]
-
-    rooms = [lines[3][3], lines[2][3], lines[3][5], lines[2][5],
-            lines[3][7], lines[2][7], lines[3][9], lines[2][9]]
-    rooms = [let2n(let) for let in rooms]
-    return tuple(rooms + [let2n(l) for l in lines[1][1:-1]])
-
-TARGET_STATE = tuple([1, 1, 2, 2, 3, 3, 4, 4] + ([0] * HALLWAY_SIZE))
-
-TYPES = (1, 2, 3, 4)
-COSTS = (None,) + (1, 10, 100, 1000)
-BOTS = (None,) + (0, 2, 4, 6)
-TOPS = (None,) + tuple((r + 1 for r in BOTS[1:]))
-DOORS = (None,) + tuple((r + 2 + HALL_START for r in BOTS[1:]))
-CORNERS_FOR_ROOM = (None,) + tuple(((d - 1, d + 1) for d in DOORS[1:]))
-CORNER_LIST = tuple((c[0] for c in CORNERS_FOR_ROOM[1:])) + CORNERS_FOR_ROOM[-1]
-VALID_LEN1_HALLMOVES = (
-    (HALL_START, HALL_START + 1),
-    (HALL_START + 1, HALL_START),
-    (STATE_SIZE - 2, STATE_SIZE - 1),
-    (STATE_SIZE - 1, STATE_SIZE - 2)
-)
-
-def print_state(state):
-    def n2str(n):
-       return str(n) if n > 0 else "."
-    print(" ".join([n2str(state[i]) for i in range(HALL_START, STATE_SIZE)]))
-    print("    " + "   ".join([n2str(state[i]) for i in TOPS[1:]]))
-    print("    " + "   ".join([n2str(state[i]) for i in BOTS[1:]]))
-
 FROZEN_OFFSET = 4
 
+def cost(apod):
+    return 10 ** (apod - 1)
 def freeze(n):
     return n + FROZEN_OFFSET if 1 <= n <= FROZEN_OFFSET else n
 def unfreeze(n):
@@ -70,134 +22,282 @@ def unfreeze(n):
 def is_frozen(n):
     return n != unfreeze(n) if n != 0 else False
 
-def room_accepts(state, rtype, atype):
-    return rtype == atype \
-        and (state[BOTS[rtype]] == state[TOPS[rtype]] == 0) \
-             or (state[BOTS[rtype]] == rtype and state[TOPS[rtype]] == 0)
+# Calculated constants used for a lot of stuff
+DOORS = {room: 2 * room for room in ROOMS}
+CORNERS_FOR_ROOM = {room: (DOORS[room] - 1, DOORS[room] + 1) for room in ROOMS}
+CORNER_LIST = tuple(
+    [CORNERS_FOR_ROOM[room][0] for room in ROOMS]
+    + [CORNERS_FOR_ROOM[ROOMS[-1]][1]]
+)
+VALID_LEN1_HALLMOVES = (
+    (0, 1), (1, 0),
+    (HALLWAY_SIZE - 2, HALLWAY_SIZE - 1),
+    (HALLWAY_SIZE - 1, HALLWAY_SIZE - 2)
+)
+POSITIONS =[(0, i) for i in range(HALLWAY_SIZE)]
+for room in ROOMS:
+    for room_i in range(ROOM_SIZE):
+        POSITIONS.append((room, room_i))
+POSITIONS = tuple(POSITIONS)
 
-def unfreeze_pathable_hallway(state):
-    state = list(state)
-    for rtype in TYPES:
-        if not room_accepts(state, rtype, rtype):
+class State(abc.ABC):
+    def __getitem__(self, key):
+        raise NotImplementedError()
+    def __str__(self,):
+        def n2str(n):
+            return str(n) if n > 0 else "."
+        lines = []
+        lines.append(" ".join([n2str(self[(0, hall_i)]) for hall_i in range(HALLWAY_SIZE)]))
+        for room_i in range(ROOM_SIZE):
+            lines.append("    " + "   ".join([n2str(self[room, room_i]) for room in ROOMS]))
+        return "\n" + "\n".join(lines)
+
+class MutableState(State):
+    def __setitem__(self, key, val):
+        raise NotImplementedError()
+    def __freeze__(self, key, val):
+        raise NotImplementedError()
+    @classmethod
+    def solution_state(cls,):
+        mut = cls()
+        for i in range(HALLWAY_SIZE):
+            mut[0, i] = 0
+        for room in ROOMS:
+            for room_i in range(ROOM_SIZE):
+                mut[room, room_i] = room
+        return mut.freeze()
+    @classmethod
+    def from_file(cls, fname):
+        def let2n(let):
+            return 0 if let == "." else ord(let) - ord("A") + 1
+        with open(fname) as f:
+            lines = [l.rstrip() for l in f.readlines()]
+
+        room_size = len(lines) - 3
+        if room_size != ROOM_SIZE:
+            raise RuntimeError("Mismatch between hardcoded and parsed room sizes")
+
+        mut = cls()
+        for hall_i, let in enumerate(lines[1][1:-1]):
+            mut[0, hall_i] = let2n(let)
+        for room_i in range(room_size):
+            str_line = 2 + room_i
+            for room in ROOMS:
+                mut[room, room_i] = let2n(lines[str_line][3 + 2*(room - 1)])
+
+        return mut.freeze()
+    def __eq__(self, o):
+        raise RuntimeError("Dont compare these things!")
+    def __hash__(self, o):
+        raise RuntimeError("Dont hash a mutable!")
+
+class SingleArrayBackedState(MutableState):
+    @staticmethod
+    def pos2key(key):
+        if key[0] == 0:
+            return key[1]
+        else:
+            return HALLWAY_SIZE + ((key[0] - 1) * ROOM_SIZE) + key[1]
+    def __init__(self, frozen=None):
+        if not frozen:
+            self.state = [0] * (HALLWAY_SIZE + 4*ROOM_SIZE)
+        else:
+            self.state = [c for c in frozen]
+    def __getitem__(self, key):
+        return self.state[self.pos2key(key)]
+    def __setitem__(self, key, val):
+        self.state[self.pos2key(key)] = val
+    def freeze(self,):
+        return tuple(self.state)
+
+class MultipleArrayBackedState(MutableState):
+    def __init__(self, frozen=None):
+        if frozen is None:
+            self.state = [[0] * HALLWAY_SIZE] \
+                + [[0] * ROOM_SIZE for _ in range(len(ROOMS))]
+        else:
+            self.state = [list(place) for place in frozen]
+    def __getitem__(self, key):
+        return self.state[key[0]][key[1]]
+    def __setitem__(self, key, val):
+        self.state[key[0]][key[1]] = val
+    def freeze(self,):
+        return tuple((tuple(place) for place in self.state))
+
+def room_accepts(state, room, apod):
+    if room != apod:
+        return False
+    elif state[room, 0] != 0:
+        return 0
+    else:
+        for room_i in range(ROOM_SIZE):
+            if state[room, room_i] != room and state[room, room_i] != 0:
+                return False
+        return True
+
+def mutating_unfreeze_hallway(mut_state):
+    for room in ROOMS:
+        if not room_accepts(mut_state, room, room):
             continue
-        for idcs in (range(DOORS[rtype], STATE_SIZE), range(HALL_START, DOORS[rtype])[::-1]):
-            for i in idcs:
-                if state[i] == 0:
+        for hall_is in (
+                range(DOORS[room], HALLWAY_SIZE),
+                range(0, DOORS[room])[::-1]
+        ):
+            for hall_i in hall_is:
+                if mut_state[0, hall_i] == 0:
                     continue
                 else:
-                    if unfreeze(state[i]) == rtype:
-                        state[i] = unfreeze(state[i])
-                        break
-    return tuple(state)
+                    if unfreeze(mut_state[0, hall_i]) == room:
+                        mut_state[0, hall_i] = unfreeze(mut_state[0, hall_i])
+                    break
 
-def ridx_to_rtype(ind):
-    return ind // 2 + 1
+def get_transition_fn(stype):
 
-def state_from_move(state, from_idx, to_idx):
-    state = list(state)
+    def after_move(frozen_state, fromloc, toloc):
+        # Create mutable copy of backing state
+        mutable = stype(frozen_state)
 
-    # Checks to make sure we're doing things sanely #
-    if state[from_idx] == 0:
-        raise RuntimeError("Trying to move from empty pos!")
-    elif state[to_idx] != 0:
-        raise RuntimeError("Trying to move into occupied pos!!")
-    elif is_frozen(state[from_idx]):
-        raise RuntimeError(f"Trying to move from frozen pos! {from_idx}")
-    elif to_idx in DOORS:
-        raise RuntimeError("Stopped in doorway!")
-    elif to_idx < HALL_START and (from_idx >= HALL_START) \
-         and not room_accepts(state, ridx_to_rtype(to_idx), state[from_idx]):
-        raise RuntimeError("Trying to move apod into non-accepting hallway")
+        # Checks to make sure we're doing things: should NEVER be hit #
+        if mutable[fromloc] == 0:
+            raise RuntimeError("Trying to move from empty pos!")
+        elif is_frozen(mutable[fromloc]):
+            raise RuntimeError(f"Trying to move from frozen pos! {from_idx}")
+        elif mutable[toloc] != 0:
+            raise RuntimeError("Trying to move into occupied pos!!")
+        elif (toloc[0] == 0) and (toloc[1] in DOORS.values()):
+            raise RuntimeError("Trying to stop in doorway!")
+        elif (fromloc[0] == 0) and (toloc[0] > 0) \
+            and not room_accepts(mutable, toloc[0], mutable[fromloc]):
+            raise RuntimeError("Trying to move apod into non-accepting hallway")
 
-    state[to_idx] = state[from_idx]
-    state[from_idx] = 0
+        # Perform the move
+        mutable[toloc] = mutable[fromloc]
+        mutable[fromloc] = 0
 
-    def freeze_hallway():
-        for i in range(HALL_START, STATE_SIZE):
-            state[i] = freeze(state[i])
+        # freeze the stuff in the hallway except for the pod we just moved
+        # (if we in fact moved it into the hallway)
+        for i in range(HALLWAY_SIZE):
+            if toloc == (0, i):
+                continue
+            mutable[0, i] = freeze(mutable[0, i])
+        mutating_unfreeze_hallway(mutable)
+        return mutable.freeze()
 
-    freeze_hallway()
-    if from_idx < HALL_START and to_idx < HALL_START:
-        pass
-    elif from_idx >= HALL_START and to_idx < HALL_START:
-        pass
-    elif from_idx < HALL_START and to_idx >= HALL_START:
-        state[to_idx] = unfreeze(state[to_idx])
-    elif from_idx >= HALL_START and to_idx >= HALL_START:
-        state[to_idx] = unfreeze(state[to_idx])
+    def get_costs_and_nbors(frozen_state,):
 
-    return unfreeze_pathable_hallway(state)
+        state = stype(frozen_state)
 
-def get_nbors(state):
-    nbors = []
+        costs_and_nbors = []
+        def consider_move(from_loc, to_loc, cost):
+            costs_and_nbors.append((
+                cost,
+                after_move(frozen_state, from_loc, to_loc)
+            ))
 
-    def append_with_cost(state, cost):
-        nbors.append((state, cost))
+        # Consider possible moves to/from rooms first
+        for room in ROOMS:
+            has_incorrect_apods = False
+            bottommost_incorrect_apod_pos = None
+            bottommost_correct_apod_pos = None
+            topmost_apod_pos = None
+            bottommost_empty_pos = None
+            full = True
+            for room_i in range(ROOM_SIZE):
+                if state[room, room_i] == 0:
+                    full = False
+                    bottommost_empty_pos = room_i
+                else:
+                    if state[room, room_i] != room:
+                        bottommost_incorrect_apod_pos = room_i
+                        has_incorrect_apods = True
+                    else:
+                        bottommost_correct_apod_pos = room_i
+                    topmost_apod_pos = topmost_apod_pos or room_i
 
-    for rtype in TYPES:
-        # If the room is happy and full, skip moving anything in/from it
-        if state[BOTS[rtype]] == state[TOPS[rtype]] == rtype:
-            continue
+            if full and not has_incorrect_apods:
+                continue
+            if state[room, 0] == 0 and has_incorrect_apods:
+                consider_move(
+                    (room, topmost_apod_pos), (room, 0),
+                    topmost_apod_pos * cost(state[room, topmost_apod_pos])
+                )
+            # Move from top of room to corners
+            if state[room, 0] != 0 and has_incorrect_apods:
+                for corner_i in CORNERS_FOR_ROOM[room]:
+                    if state[0, corner_i] == 0:
+                        consider_move(
+                            (room, 0), (0, corner_i),
+                            2 * cost(state[room, 0])
+                        )
+            if not has_incorrect_apods:
+                for room_i in range(bottommost_empty_pos)[::-1]:
+                    if state[room, room_i] == room:
+                        consider_move(
+                            (room, room_i), (room, bottommost_empty_pos),
+                            (bottommost_empty_pos - room_i) * cost(state[room, room_i])
+                        )
 
-        # Moving from bottom of room to top
-        if state[BOTS[rtype]] != 0 and state[BOTS[rtype]] != rtype and state[TOPS[rtype]] == 0:
-            # print("k6")
-            append_with_cost(
-                state_from_move(state, BOTS[rtype], TOPS[rtype]),
-                COSTS[state[BOTS[rtype]]]
-            )
-
-        # Moving from top of room to bottom
-        if state[TOPS[rtype]] != 0 and state[BOTS[rtype]] == 0 and state[TOPS[rtype]] == rtype:
-            # print("k5")
-            append_with_cost(
-                state_from_move(state, TOPS[rtype], BOTS[rtype]),
-                COSTS[state[TOPS[rtype]]]
-            )
-
-        # Moving from top of room to corner
-        if state[TOPS[rtype]] != 0:
-            for corner_idx in CORNERS_FOR_ROOM[rtype]:
-                if state[corner_idx] == 0:
-                    # print("k4")
-                    append_with_cost(
-                        state_from_move(state, TOPS[rtype], corner_idx),
-                        2 * COSTS[state[TOPS[rtype]]]
+            # Move from corners to bottommost spot in room
+            if (not has_incorrect_apods) \
+               and (bottommost_empty_pos < (topmost_apod_pos or ROOM_SIZE)):
+                for corner_i in CORNERS_FOR_ROOM[room]:
+                    if state[0, corner_i] != room:
+                        continue
+                    consider_move(
+                        (0, corner_i), (room, bottommost_empty_pos),
+                        (2 + bottommost_empty_pos) * cost(state[0, corner_i])
                     )
 
-    # Move across hallway: length 1 moves
-    for from_idx, to_idx in VALID_LEN1_HALLMOVES:
-        if state[from_idx] != 0 and not is_frozen(state[from_idx]) and state[to_idx] == 0:
-            # print("k3")
-            append_with_cost(
-                state_from_move(state, from_idx, to_idx),
-                COSTS[state[from_idx]]
-            )
-
-    # Move across hallway: skipping doors
-    for left_i in range(len(CORNER_LIST) - 1):
-        lcorner = CORNER_LIST[left_i]
-        rcorner = CORNER_LIST[left_i + 1]
-        for from_idx, to_idx in ((lcorner, rcorner), (rcorner, lcorner)):
-            if state[from_idx] != 0 and not is_frozen(state[from_idx]) and state[to_idx] == 0:
-                # print("k2")
-                append_with_cost(
-                    state_from_move(state, from_idx, to_idx),
-                    2 * COSTS[state[from_idx]]
+        # Move across hallway: length 1 moves
+        for from_idx, to_idx in VALID_LEN1_HALLMOVES:
+            if state[0, from_idx] != 0 and not is_frozen(state[0, from_idx]) \
+                and state[0, to_idx] == 0:
+                consider_move(
+                    (0, from_idx), (0, to_idx),
+                    cost(state[0, from_idx])
                 )
 
-    for rtype in range(1, len(CORNERS_FOR_ROOM)):
-        for from_idx in CORNERS_FOR_ROOM[rtype]:
-            if state[from_idx] != 0 and state[from_idx] == rtype \
-               and not is_frozen(state[from_idx]) \
-               and room_accepts(state, ridx_to_rtype(BOTS[rtype]), state[from_idx]):
-                # print(f"k1: from_idx {from_idx}")
-                append_with_cost(
-                    state_from_move(state, from_idx, TOPS[rtype]),
-                    2 * COSTS[state[from_idx]]
-                )
+        # Move across hallway between corners
+        for left_i in range(len(CORNER_LIST) - 1):
+            lcorner = CORNER_LIST[left_i]
+            rcorner = CORNER_LIST[left_i + 1]
+            for from_idx, to_idx in ((lcorner, rcorner), (rcorner, lcorner)):
+                if state[0, from_idx] != 0 and not is_frozen(state[0, from_idx]) \
+                    and state[0, to_idx] == 0:
+                    consider_move(
+                        (0, from_idx), (0, to_idx),
+                        2 * cost(state[0, from_idx])
+                    )
+        return costs_and_nbors
 
-    return nbors
+    return get_costs_and_nbors
+
+def underestimate_cost_to_solve(state,):
+    est = 0
+    # Look at the apods in room they don't belong in.
+    # Assuming they can phase through other apods to the top of the room
+    # they belong in, add the cost of that path
+    for room in ROOMS:
+        for room_i in range(ROOM_SIZE):
+            if state[room, room_i] == 0:
+                continue
+            elif state[room, room_i] == room:
+                continue
+            else:
+                plen = (room_i + 1) + 1 + abs(DOORS[state[room, room_i]] - DOORS[room])
+                est += plen * cost(state[room, room_i])
+
+    # Look at things in hallways. Again assuming they can phase to the mouth
+    # of the correct room, calculate that path's cost
+    for hall_i in range(HALLWAY_SIZE):
+        if state[0, hall_i] == 0:
+            continue
+        else:
+            apod = unfreeze(state[0, hall_i])
+            plen = 1 + abs(DOORS[apod] - hall_i)
+            est += plen * cost(apod)
+
+    return est
 
 def astar(starting_state, target_state, nbors_with_costs_fn, heuristic):
     visited = {}
@@ -215,7 +315,7 @@ def astar(starting_state, target_state, nbors_with_costs_fn, heuristic):
             break
 
         nexts = nbors_with_costs_fn(state)
-        for nbor, transition_cost in nexts:
+        for transition_cost, nbor in nexts:
             heapq.heappush(
                 heap,
                 (
@@ -226,8 +326,15 @@ def astar(starting_state, target_state, nbors_with_costs_fn, heuristic):
             )
 
 if __name__ == "__main__":
-    starting_state = state_from_file(sys.argv[1])
-    target_state = TARGET_STATE if len(sys.argv) == 2 else state_from_file(sys.argv[2])
 
-    next_states = get_nbors(starting_state)
-    astar(starting_state, target_state, get_nbors, lambda x: 0)
+    stype = SingleArrayBackedState
+
+    starting_state = stype.from_file(sys.argv[1])
+    target_state = stype.solution_state() \
+        if len(sys.argv) == 2 else stype.from_file(sys.argv[2])
+
+    astar(
+        starting_state, target_state,
+        get_transition_fn(stype),
+        lambda x: underestimate_cost_to_solve(stype(x))
+    )
