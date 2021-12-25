@@ -1,5 +1,6 @@
 import sys
 import itertools
+from math import floor, ceil
 
 LETS = "xyzw"
 
@@ -118,13 +119,24 @@ if __name__ == "__main__":
     # final_state = {t: eval_tree(trees[t], inp) for t in trees}
     # print(final_state)
     ops = get_ops(sys.argv[1])
+    iterable = None
+
+    if len(sys.argv) == 4:
+        nlen = len(sys.argv[3])
+        if nlen != int(sys.argv[2]):
+            raise RuntimeError(f"Incorrect in num length {nlen}")
+        num =  [int(c) for c in sys.argv[3]]
+        iterable = (num,)
+    else:
+        iterable = itertools.product(NUMS[::1], repeat=int(sys.argv[2]))
 
     i = 0
-    for in_number in itertools.product(NUMS, repeat=int(sys.argv[2])):
-        z_state = run_program(ops, in_number)["z"]
-        nstr = "".join([str(i) for i in in_number])
+    for in_number in iterable:
         i += 1
+        z_state = run_program(ops, in_number)["z"]
+        nstr = int("".join([str(i) for i in in_number]))
+        print(f"{nstr} -> z = {z_state} with sum of {z_state + nstr}")
         if z_state == 0:
             print(f"Accepted {nstr}!")
-            exit()
-    print(i)
+        if i > 200:
+            break
