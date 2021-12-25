@@ -40,10 +40,10 @@ def run_reduced(reduced_ops, in_num):
         zint = z / op[0]
         z = floor(zint) if zint >= 0 else ceil(zint)
         x = x + op[1]
-        x = int(x != w)
-        y = 0
-        y = y + 25
-        y = y & x
+        x = 1 if x == w else 0
+        x = 1 if x == 0 else 0
+        y = 25
+        y = y * x
         y += 1
         z = z * y
         y = 0
@@ -56,6 +56,8 @@ def run_reduced(reduced_ops, in_num):
 
 if __name__ == "__main__":
     reduced_ops = get_reduced_ops(sys.argv[1])
+    # print(reduced_ops)
+    # exit()
 
     iterable = None
     if len(sys.argv) == 4:
@@ -65,15 +67,12 @@ if __name__ == "__main__":
         num =  [int(c) for c in sys.argv[3]]
         iterable = (num,)
     else:
-        iterable = itertools.product(NUMS[::1], repeat=int(sys.argv[2]))
+        iterable = itertools.product(NUMS[::-1], repeat=int(sys.argv[2]))
 
-    i = 0
     for in_number in iterable:
         n = int("".join([str(i) for i in in_number]))
-        i += 1
         state = run_reduced(reduced_ops, in_number)
         z = state["z"]
-        print(f"{n} => {z}")
         if z == 0:
             print(f'Accepted {n}!')
             exit()
