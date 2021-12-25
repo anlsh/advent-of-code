@@ -100,7 +100,9 @@ def run_program(ops, in_num_tuple):
         elif op[0] == "div":
             if arg2 == 0:
                 raise RuntimeError("Dividing by zero!")
-            state[place] = arg1 // arg2
+            q = arg1 / 2
+            q = ceil(q) if q < 0 else floor(q)
+            state[place] = q
         elif op[0] == "mod":
             if arg2 == 0:
                 raise RuntimeError("Modding by zero!")
@@ -118,7 +120,7 @@ if __name__ == "__main__":
     ops = get_ops(sys.argv[1])
 
     i = 0
-    for in_number in itertools.product(NUMS[::-1], repeat=int(sys.argv[2])):
+    for in_number in itertools.product(NUMS, repeat=int(sys.argv[2])):
         z_state = run_program(ops, in_number)["z"]
         nstr = "".join([str(i) for i in in_number])
         i += 1
