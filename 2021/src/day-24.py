@@ -10,7 +10,8 @@ DIV_KEY = "/"
 MOD_KEY = "%"
 EQL_KEY = "=="
 
-# TODO Remove the reverse to solve part A
+# TODO Adding the reverse will solve part b in ~5min
+# Figure out a much smarter way to do that :/
 NUMS = (9,8,7,6,5,4,3,2,1)#[::-1]
 
 def get_reduced_ops(fname):
