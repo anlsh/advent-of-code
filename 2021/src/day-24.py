@@ -10,7 +10,8 @@ DIV_KEY = "/"
 MOD_KEY = "%"
 EQL_KEY = "=="
 
-NUMS = (1,2,3,4,5,6,7,8,9)
+# TODO Remove the reverse to solve part A
+NUMS = (9,8,7,6,5,4,3,2,1)#[::-1]
 
 def get_reduced_ops(fname):
     reduced_ops = []
@@ -33,38 +34,34 @@ def get_reduced_ops(fname):
 def truncate(n):
     return ceil(n) if n <= 0 else floor(n)
 
-def run_reduced(reduced_ops, in_num):
-    x = y = z = 0
-    for i, op in enumerate(reduced_ops):
-        # Finals
-        x_f = int(z % 26 + op[1] != in_num[i])
-        y_f = (in_num[i] + op[2]) * x_f
-        z_f = truncate(z / op[0]) * (25 * x_f + 1) + y_f
+def solve(reduced_ops):
+    n_ops = len(reduced_ops)
+    spot_26s = [1 if op[0] == 26 else 0 for op in reduced_ops]
+    n_26s = sum(spot_26s)
+    n_26s_remaining_inclusive = [sum(spot_26s[i+1:]) for i in range(n_ops)]
 
-        # Set out vars
-        x, y, z = x_f, y_f, z_f
+    def solve_helper(z0, i, curr_state,):
+        if i == 14:
+            if z0 == 0:
+                print(f"Holy shit we accepted something")
+                print(curr_state)
+                print("".join([str(c) for c in curr_state]))
+                exit()
+            else:
+                return
+        # TODO Might need a + 1 to get the right anser :/
+        elif z0 >= 26 ** (n_26s_remaining_inclusive[i] + 2):
+            return
+        else:
+            for n in NUMS:
+                op = reduced_ops[i]
+                x = int(z0 % 26 + op[1] != n)
+                y = x * (n + op[2])
+                znew = truncate(z0 / op[0]) * (25 * x + 1) + y
+                solve_helper(znew, i + 1, curr_state + (n,))
 
-    return {"x": x, "y": y, "z": z}
+    solve_helper(0, 0, tuple())
 
 if __name__ == "__main__":
     reduced_ops = get_reduced_ops(sys.argv[1])
-    # print(reduced_ops)
-    # exit()
-
-    iterable = None
-    if len(sys.argv) == 4:
-        nlen = len(sys.argv[3])
-        if nlen != int(sys.argv[2]):
-            raise RuntimeError(f"Incorrect in num length {nlen}")
-        num =  [int(c) for c in sys.argv[3]]
-        iterable = (num,)
-    else:
-        iterable = itertools.product(NUMS[::-1], repeat=int(sys.argv[2]))
-
-    for in_number in iterable:
-        n = int("".join([str(i) for i in in_number]))
-        state = run_reduced(reduced_ops, in_number)
-        z = state["z"]
-        if z == 0:
-            print(f'Accepted {n}!')
-            exit()
+    solve(reduced_ops)
