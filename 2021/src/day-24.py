@@ -30,29 +30,21 @@ def get_reduced_ops(fname):
 
     return tuple(reduced_ops)
 
-def run_reduced(reduced_ops, in_num):
-    x = y = z = w = 0
-    for i, op in enumerate(reduced_ops):
-        w = in_num[i]
-        x = 0
-        x = x + z
-        x = x % 26
-        zint = z / op[0]
-        z = floor(zint) if zint >= 0 else ceil(zint)
-        x = x + op[1]
-        x = 1 if x == w else 0
-        x = 1 if x == 0 else 0
-        y = 25
-        y = y * x
-        y += 1
-        z = z * y
-        y = 0
-        y = w
-        y = y + op[2]
-        y = y * x
-        z = z + y
+def truncate(n):
+    return ceil(n) if n <= 0 else floor(n)
 
-    return {"x": x, "y": y, "z": z, "w": w}
+def run_reduced(reduced_ops, in_num):
+    x = y = z = 0
+    for i, op in enumerate(reduced_ops):
+        # Finals
+        x_f = int(z % 26 + op[1] != in_num[i])
+        y_f = (in_num[i] + op[2]) * x_f
+        z_f = truncate(z / op[0]) * (25 * x_f + 1) + y_f
+
+        # Set out vars
+        x, y, z = x_f, y_f, z_f
+
+    return {"x": x, "y": y, "z": z}
 
 if __name__ == "__main__":
     reduced_ops = get_reduced_ops(sys.argv[1])
